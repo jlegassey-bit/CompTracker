@@ -1,3 +1,7 @@
+// ========================
+// FormService.gs (FULL FILE)
+// ========================
+
 // --- DROPDOWN DATA FOR FROI FORM ---
 function getFroiDropdownData() {
   try {
@@ -64,7 +68,7 @@ function getFroiDropdownData() {
 
     // Providers
     var providers = getTreatmentProvidersDirectory().providers || [];
-    
+
     // Injury Types
     var injuryTypes = [];
     var typeSh = ss.getSheetByName('Type');
@@ -124,7 +128,7 @@ function getTreatmentProvidersDirectory() {
 function processForm(formObject) {
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    
+
     // 1. Ensure Form Sheet Exists & Headers are correct
     var sheet = ensureSheet_(FORM_SHEET_NAME, [
       'Completed By','Email','Submitted At','Incident Date','Time','Location','Landmark',
@@ -140,7 +144,7 @@ function processForm(formObject) {
     var reporterEmail = safe_(formObject.emailAddress).toLowerCase();
     var departmentName = safe_(formObject.departmentName);
     var workLocation = safe_(formObject.workLocation);
-    
+
     if (!safe_(formObject.completedByName)) throw new Error("Completed By is required.");
     if (reporterEmail.indexOf('@') === -1) throw new Error("Valid email is required.");
     if (!departmentName) throw new Error("Department is required.");
@@ -176,11 +180,10 @@ function processForm(formObject) {
     var recordId = sheet.getLastRow();
 
     // 2. AUTO-ADD DEPARTMENT CONTACTS to Case_Contacts Sheet
-    var deptContacts = getDeptContacts_(departmentName); 
-    // Returns object with keys: hrName, hrEmail, hrPhone, payrollName..., safetyName...
+    var deptContacts = getDeptContacts_(departmentName);
 
     var contactSheet = ensureSheet_(CONTACTS_SHEET_NAME, ['ID','Name','Role','Phone','Email']);
-    
+
     // Add HR
     if (deptContacts.hrEmail) {
       contactSheet.appendRow([recordId, deptContacts.hrName || 'HR/PAO', 'PAO/HR Generalist', deptContacts.hrPhone || '', deptContacts.hrEmail]);
@@ -195,7 +198,7 @@ function processForm(formObject) {
     }
     // Add Supervisor (Reporter)
     if (reporterEmail) {
-        contactSheet.appendRow([recordId, formObject.completedByName, 'Supervisor', '', reporterEmail]);
+      contactSheet.appendRow([recordId, formObject.completedByName, 'Supervisor', '', reporterEmail]);
     }
 
     // 3. Send Notifications
@@ -231,19 +234,18 @@ function sendSubmissionEmails_(f, recordId) {
              "Date: " + safe_(f.incidentDate) + "\n" +
              "Location: " + safe_(f.incidentLocation) + "\n" +
              "This is an automated message.";
-  
+
   try { MailApp.sendEmail(f.emailAddress, subject, body); } catch(e){}
 
   // 2. Notification to HR/Safety (Routing)
-  // We use the same lookup to find emails to notify immediately upon submission
   var deptContacts = getDeptContacts_(f.departmentName);
-  var recipients = [deptContacts.hrEmail, deptContacts.safetyEmail].filter(function(e){ 
-    return e && e.indexOf('@') > -1; 
+  var recipients = [deptContacts.hrEmail, deptContacts.safetyEmail].filter(function(e){
+    return e && e.indexOf('@') > -1;
   });
-  
+
   // Remove duplicates
   var uniqueRecipients = recipients.filter(function(item, pos) {
-      return recipients.indexOf(item) == pos;
+    return recipients.indexOf(item) == pos;
   });
 
   if (uniqueRecipients.length > 0) {
@@ -254,7 +256,7 @@ function sendSubmissionEmails_(f, recordId) {
                      "Cause: " + safe_(f.primaryCause) + "\n" +
                      "Description: " + safe_(f.description) + "\n\n" +
                      "View Record: " + adminLink;
-    
+
     try { MailApp.sendEmail(uniqueRecipients.join(','), notifySubj, notifyBody); } catch(e){}
   }
 }
@@ -262,16 +264,14 @@ function sendSubmissionEmails_(f, recordId) {
 function getDeptContacts_(deptName) {
   var def = { hrName:'', hrEmail:'', hrPhone:'', payrollName:'', payrollEmail:'', payrollPhone:'', safetyName:'', safetyEmail:'', safetyPhone:'' };
   if (!deptName) return def;
-  
+
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sh = ss.getSheetByName(DEPTS_SHEET_NAME);
   if (!sh || sh.getLastRow() < 2) return def;
-  
+
   var data = sh.getRange(2, 1, sh.getLastRow() - 1, 11).getDisplayValues();
   for (var i = 0; i < data.length; i++) {
     if (String(data[i][0]).trim().toLowerCase() === String(deptName).trim().toLowerCase()) {
-      // Mapping columns based on Settings structure: 
-      // 0:Name, 1:HR Name, 2:HR Email, 3:HR Phone, 4:Pay Name, 5:Pay Email, 6:Pay Phone, 7:Safe Name, 8:Safe Email, 9:Safe Phone
       return {
         hrName: data[i][1], hrEmail: data[i][2], hrPhone: data[i][3],
         payrollName: data[i][4], payrollEmail: data[i][5], payrollPhone: data[i][6],
