@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    
+    .messaging-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .messaging-header {
+      background: linear-gradient(135deg, #005575 0%, #4FC3DC 100%);
+      color: white;
+      padding: 20px 25px;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .messaging-header h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+    
+    .case-id-badge {
+      background: rgba(255,255,255,0.2);
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    .messaging-body {
+      padding: 25px;
+    }
+    
+    .section {
+      margin-bottom: 25px;
+    }
+    
+    .section-label {
+      font-weight: 600;
+      color: #005575;
+      margin-bottom: 10px;
+      font-size: 15px;
+      display: block;
+    }
+    
+    /* Recipients Section */
+    .recipients-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 10px;
+      max-height: 250px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 6px;
+      background: #fafafa;
+    }
+    
+    .recipient-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 10px;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .recipient-item:hover {
+      border-color: #4FC3DC;
+      background: #f0f8ff;
+    }
+    
+    .recipient-item.selected {
+      border-color: #4FC3DC;
+      background: #e6f7ff;
+      box-shadow: 0 0 0 2px rgba(79, 195, 220, 0.1);
+    }
+    
+    .recipient-checkbox {
+      margin-right: 10px;
+      margin-top: 2px;
+      cursor: pointer;
+      width: 18px;
+      height: 18px;
+      accent-color: #4FC3DC;
+    }
+    
+    .recipient-info {
+      flex: 1;
+    }
+    
+    .recipient-name {
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+    
+    .recipient-details {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .recipient-email {
+      color: #4FC3DC;
+      font-size: 11px;
+      margin-top: 2px;
+    }
+    
+    .select-all-container {
+      margin-bottom: 10px;
+      padding: 10px;
+      background: #f0f8ff;
+      border-radius: 6px;
+      border: 1px solid #4FC3DC;
+    }
+    
+    .select-all-checkbox {
+      margin-right: 8px;
+      accent-color: #4FC3DC;
+      cursor: pointer;
+    }
+    
+    .select-all-label {
+      font-weight: 600;
+      color: #005575;
+      cursor: pointer;
+    }
+    
+    /* Form Fields */
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #4FC3DC;
+      box-shadow: 0 0 0 3px rgba(79, 195, 220, 0.1);
+    }
+    
+    textarea {
+      min-height: 200px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+    
+    /* Attachment Section */
+    .attachment-upload {
+      border: 2px dashed #ddd;
+      border-radius: 6px;
+      padding: 20px;
+      text-align: center;
+      background: #fafafa;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .attachment-upload:hover {
+      border-color: #4FC3DC;
+      background: #f0f8ff;
+    }
+    
+    .attachment-upload.dragover {
+      border-color: #4FC3DC;
+      background: #e6f7ff;
+    }
+    
+    .upload-icon {
+      font-size: 40px;
+      color: #4FC3DC;
+      margin-bottom: 10px;
+    }
+    
+    .upload-text {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .upload-text strong {
+      color: #4FC3DC;
+    }
+    
+    #fileInput {
+      display: none;
+    }
+    
+    .attached-files {
+      margin-top: 15px;
+    }
+    
+    .file-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    
+    .file-icon {
+      font-size: 24px;
+      margin-right: 12px;
+      color: #4FC3DC;
+    }
+    
+    .file-info {
+      flex: 1;
+    }
+    
+    .file-name {
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+    
+    .file-size {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .file-remove {
+      background: #ff4444;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .file-remove:hover {
+      background: #cc0000;
+    }
+    
+    /* Buttons */
+    .button-container {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: #4FC3DC;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #3ab3cc;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(79, 195, 220, 0.3);
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    /* Loading Spinner */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      color: white;
+      margin-top: 20px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    /* Character Counter */
+    .char-counter {
+      text-align: right;
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+    
+    /* Alert Messages */
+    .alert {
+      padding: 12px 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    
+    .alert-warning {
+      background: #fff9e6;
+      border-left: 4px solid #ffa500;
+      color: #856404;
+    }
+    
+    .alert-info {
+      background: #e6f7ff;
+      border-left: 4px solid #4FC3DC;
+      color: #004085;
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div style="text-align: center;">
+      <div class="spinner"></div>
+      <div class="loading-text">Sending Email...</div>
+    </div>
+  </div>
+
+  <div class="messaging-container">
+    <div class="messaging-header">
+      <h2>📧 Send Case Email</h2>
+      <span class="case-id-badge" id="caseIdBadge">Loading...</span>
+    </div>
+    
+    <div class="messaging-body">
+      <div class="alert alert-info">
+        <strong>ℹ️ Email Tracking:</strong> All emails will be sent from your personal email address. The case ID will be automatically added to the subject line for tracking. Please include the case ID in any replies to ensure they can be linked back to this case.
+      </div>
+      
+      <!-- Recipients Section -->
+      <div class="section">
+        <label class="section-label">Select Recipients:</label>
+        
+        <div class="select-all-container">
+          <input type="checkbox" id="selectAllCheckbox" class="select-all-checkbox">
+          <label for="selectAllCheckbox" class="select-all-label">Select All Recipients</label>
+        </div>
+        
+        <div class="recipients-grid" id="recipientsGrid">
+          <p style="text-align: center; color: #666;">Loading contacts...</p>
+        </div>
+      </div>
+      
+      <!-- Subject Line -->
+      <div class="section">
+        <label class="section-label" for="emailSubject">Subject Line:</label>
+        <input type="text" id="emailSubject" placeholder="Enter email subject...">
+        <div class="char-counter">
+          <span id="subjectCounter">0</span>/200 characters
+        </div>
+      </div>
+      
+      <!-- Message Body -->
+      <div class="section">
+        <label class="section-label" for="emailMessage">Message:</label>
+        <textarea id="emailMessage" placeholder="Type your message here..."></textarea>
+        <div class="char-counter">
+          <span id="messageCounter">0</span> characters
+        </div>
+      </div>
+      
+      <!-- Attachments -->
+      <div class="section">
+        <label class="section-label">Attachments (Optional):</label>
+        <div class="attachment-upload" id="attachmentUpload">
+          <div class="upload-icon">📎</div>
+          <div class="upload-text">
+            <strong>Click to upload</strong> or drag and drop files here<br>
+            <small>Maximum 5 files, 10MB per file</small>
+          </div>
+          <input type="file" id="fileInput" multiple>
+        </div>
+        
+        <div class="attached-files" id="attachedFilesList"></div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="button-container">
+        <button class="btn btn-secondary" onclick="closeMessaging()">Cancel</button>
+        <button class="btn btn-primary" id="sendBtn" onclick="sendEmail()">
+          📤 Send Email
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var currentCaseId = '';
+    var recipients = [];
+    var attachedFiles = [];
+    
+    // Initialize
+    window.onload = function() {
+      // Get case ID from URL parameter
+      var urlParams = new URLSearchParams(window.location.search);
+      currentCaseId = urlParams.get('caseId') || '';
+      
+      document.getElementById('caseIdBadge').textContent = currentCaseId;
+      
+      loadRecipients();
+      setupEventListeners();
+    };
+    
+    function setupEventListeners() {
+      // Character counters
+      document.getElementById('emailSubject').addEventListener('input', function() {
+        var length = this.value.length;
+        document.getElementById('subjectCounter').textContent = length;
+        if (length > 200) {
+          this.value = this.value.substring(0, 200);
+          document.getElementById('subjectCounter').textContent = 200;
+        }
+      });
+      
+      document.getElementById('emailMessage').addEventListener('input', function() {
+        document.getElementById('messageCounter').textContent = this.value.length;
+      });
+      
+      // File upload
+      var uploadArea = document.getElementById('attachmentUpload');
+      var fileInput = document.getElementById('fileInput');
+      
+      uploadArea.addEventListener('click', function() {
+        fileInput.click();
+      });
+      
+      fileInput.addEventListener('change', function(e) {
+        handleFiles(e.target.files);
+      });
+      
+      // Drag and drop
+      uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+      
+      uploadArea.addEventListener('dragleave', function() {
+        uploadArea.classList.remove('dragover');
+      });
+      
+      uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+      });
+      
+      // Select all checkbox
+      document.getElementById('selectAllCheckbox').addEventListener('change', function() {
+        var checkboxes = document.querySelectorAll('.recipient-checkbox');
+        checkboxes.forEach(cb => {
+          cb.checked = this.checked;
+          updateRecipientItemStyle(cb);
+        });
+      });
+    }
+    
+    function loadRecipients() {
+  // Try to get token from sessionStorage first
+  var token = sessionStorage.getItem('adminToken');
+  
+  // If not in sessionStorage, try URL parameter
+  if (!token) {
+    var urlParams = new URLSearchParams(window.location.search);
+    token = urlParams.get('token');
+  }
+  
+  // If still no token, try UserProperties as fallback
+  if (!token) {
+    google.script.run
+      .withSuccessHandler(function(storedToken) {
+        if (storedToken) {
+          loadRecipientsWithToken(storedToken);
+        } else {
+          document.getElementById('recipientsGrid').innerHTML = 
+            '<p style="color: #ff4444;">Authentication error. Please close and reopen from the admin panel.</p>';
+        }
+      })
+      .withFailureHandler(function(error) {
+        document.getElementById('recipientsGrid').innerHTML = 
+          '<p style="color: #ff4444;">Error: ' + error + '</p>';
+      })
+      .getStoredAdminToken();
+    return;
+  }
+  
+  loadRecipientsWithToken(token);
+}
+
+function loadRecipientsWithToken(token) {
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) {
+        recipients = result.recipients;
+        displayRecipients();
+      } else {
+        document.getElementById('recipientsGrid').innerHTML = 
+          '<p style="color: #ff4444;">Error loading contacts: ' + result.error + '</p>';
+      }
+    })
+    .withFailureHandler(function(error) {
+      document.getElementById('recipientsGrid').innerHTML = 
+        '<p style="color: #ff4444;">Error: ' + error + '</p>';
+    })
+    .adminGetMessagingContacts(token, currentCaseId);
+}
+    
+    function displayRecipients() {
+      var grid = document.getElementById('recipientsGrid');
+      
+      if (recipients.length === 0) {
+        grid.innerHTML = '<p style="text-align: center; color: #666;">No contacts available for this case.</p>';
+        return;
+      }
+      
+      grid.innerHTML = '';
+      
+      recipients.forEach(function(recipient, index) {
+        var item = document.createElement('div');
+        item.className = 'recipient-item';
+        item.onclick = function() {
+          var checkbox = this.querySelector('.recipient-checkbox');
+          checkbox.checked = !checkbox.checked;
+          updateRecipientItemStyle(checkbox);
+          updateSelectAllCheckbox();
+        };
+        
+        var role = recipient.role;
+        if (recipient.department) {
+          role += ' - ' + recipient.department;
+        }
+        
+        item.innerHTML = `
+          <input type="checkbox" class="recipient-checkbox" data-email="${recipient.email}" onclick="event.stopPropagation(); updateRecipientItemStyle(this); updateSelectAllCheckbox();">
+          <div class="recipient-info">
+            <div class="recipient-name">${recipient.name}</div>
+            <div class="recipient-details">${role}</div>
+            <div class="recipient-email">${recipient.email}</div>
+          </div>
+        `;
+        
+        grid.appendChild(item);
+      });
+    }
+    
+    function updateRecipientItemStyle(checkbox) {
+      var item = checkbox.closest('.recipient-item');
+      if (checkbox.checked) {
+        item.classList.add('selected');
+      } else {
+        item.classList.remove('selected');
+      }
+    }
+    
+    function updateSelectAllCheckbox() {
+      var allCheckboxes = document.querySelectorAll('.recipient-checkbox');
+      var checkedCount = document.querySelectorAll('.recipient-checkbox:checked').length;
+      var selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      
+      selectAllCheckbox.checked = checkedCount === allCheckboxes.length && allCheckboxes.length > 0;
+      selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < allCheckboxes.length;
+    }
+    
+    function handleFiles(files) {
+      if (attachedFiles.length + files.length > 5) {
+        alert('Maximum 5 files allowed');
+        return;
+      }
+      
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        
+        if (file.size > 10 * 1024 * 1024) {
+          alert('File "' + file.name + '" exceeds 10MB limit');
+          continue;
+        }
+        
+        attachedFiles.push(file);
+      }
+      
+      displayAttachedFiles();
+    }
+    
+    function displayAttachedFiles() {
+      var container = document.getElementById('attachedFilesList');
+      
+      if (attachedFiles.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      
+      container.innerHTML = '';
+      
+      attachedFiles.forEach(function(file, index) {
+        var item = document.createElement('div');
+        item.className = 'file-item';
+        
+        var sizeKB = (file.size / 1024).toFixed(1);
+        var sizeText = sizeKB < 1024 ? sizeKB + ' KB' : (sizeKB / 1024).toFixed(1) + ' MB';
+        
+        item.innerHTML = `
+          <div class="file-icon">📄</div>
+          <div class="file-info">
+            <div class="file-name">${file.name}</div>
+            <div class="file-size">${sizeText}</div>
+          </div>
+          <button class="file-remove" onclick="removeFile(${index})">Remove</button>
+        `;
+        
+        container.appendChild(item);
+      });
+    }
+    
+    function removeFile(index) {
+      attachedFiles.splice(index, 1);
+      displayAttachedFiles();
+    }
+    
+    function sendEmail() {
+      // Get selected recipients
+      var selectedEmails = [];
+      var checkboxes = document.querySelectorAll('.recipient-checkbox:checked');
+      checkboxes.forEach(function(cb) {
+        selectedEmails.push(cb.dataset.email);
+      });
+      
+      if (selectedEmails.length === 0) {
+        alert('Please select at least one recipient');
+        return;
+      }
+      
+      var subject = document.getElementById('emailSubject').value.trim();
+      if (!subject) {
+        alert('Please enter a subject line');
+        return;
+      }
+      
+      var message = document.getElementById('emailMessage').value.trim();
+      if (!message) {
+        alert('Please enter a message');
+        return;
+      }
+      
+      // Show loading overlay
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      document.getElementById('sendBtn').disabled = true;
+      
+      // Process attachments
+      processAttachmentsAndSend(selectedEmails, subject, message);
+    }
+    
+    function processAttachmentsAndSend(selectedEmails, subject, message) {
+      if (attachedFiles.length === 0) {
+        // No attachments, send immediately
+        sendEmailToServer(selectedEmails, subject, message, []);
+        return;
+      }
+      
+      var processedAttachments = [];
+      var processedCount = 0;
+      
+      attachedFiles.forEach(function(file) {
+        var reader = new FileReader();
+        
+        reader.onload = function(e) {
+          var base64Data = e.target.result.split(',')[1];
+          processedAttachments.push({
+            name: file.name,
+            mimeType: file.type,
+            data: base64Data
+          });
+          
+          processedCount++;
+          
+          if (processedCount === attachedFiles.length) {
+            sendEmailToServer(selectedEmails, subject, message, processedAttachments);
+          }
+        };
+        
+        reader.readAsDataURL(file);
+      });
+    }
+    
+    function sendEmailToServer(selectedEmails, subject, message, attachments) {
+  var token = sessionStorage.getItem('adminToken');
+  
+  if (!token) {
+    var urlParams = new URLSearchParams(window.location.search);
+    token = urlParams.get('token');
+  }
+  
+  if (!token) {
+    alert('Authentication error. Please close and reopen from the admin panel.');
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('sendBtn').disabled = false;
+    return;
+  }
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          document.getElementById('loadingOverlay').style.display = 'none';
+          document.getElementById('sendBtn').disabled = false;
+          
+          if (result.success) {
+            alert('✅ Email sent successfully to ' + selectedEmails.length + ' recipient(s)!');
+            google.script.host.close();
+          } else {
+            alert('❌ Error sending email: ' + result.error);
+          }
+        })
+        .withFailureHandler(function(error) {
+          document.getElementById('loadingOverlay').style.display = 'none';
+          document.getElementById('sendBtn').disabled = false;
+          alert('❌ Error: ' + error);
+        })
+        .adminSendCaseEmail(token, currentCaseId, selectedEmails, subject, message, attachments);
+    }
+    
+    function closeMessaging() {
+      google.script.host.close();
+    }
+  </script>
+</body>
+</html>

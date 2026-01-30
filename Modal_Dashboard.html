@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <style>
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-card.green {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .stat-card.blue {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    .stat-card.orange {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="modal fade" id="dashboardModal" tabindex="-1" role="dialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" style="max-width: 95%;">
+    <div class="modal-content">
+      
+      <div class="modal-header bg-dark text-white py-2">
+        <h5 class="modal-title"><i class="fas fa-chart-line mr-2"></i>Dashboard & Analytics</h5>
+        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+      </div>
+      
+      <div class="modal-body p-4">
+        
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="stat-card">
+              <div class="stat-label">Total Cases</div>
+              <div class="stat-value" id="stat_total">0</div>
+              <small>All time</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card green">
+              <div class="stat-label">Open Cases</div>
+              <div class="stat-value" id="stat_open">0</div>
+              <small>Currently active</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card blue">
+              <div class="stat-label">Closed Cases</div>
+              <div class="stat-value" id="stat_closed">0</div>
+              <small>Resolved</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card orange">
+              <div class="stat-label">Avg Days to Close</div>
+              <div class="stat-value" id="stat_avg">0</div>
+              <small>Resolution time</small>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Charts Row 1 -->
+        <div class="row">
+          <div class="col-md-8">
+            <div class="card">
+              <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="fas fa-chart-area mr-2"></i>Injury Trends (Last 6 Months)</h6>
+              </div>
+              <div class="card-body">
+                <div class="chart-container">
+                  <canvas id="trendsChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="fas fa-building mr-2"></i>Top 5 Departments</h6>
+              </div>
+              <div class="card-body">
+                <div class="chart-container">
+                  <canvas id="deptChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Charts Row 2 -->
+        <div class="row mt-4">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header bg-danger text-white">
+                <h6 class="mb-0"><i class="fas fa-heartbeat mr-2"></i>Top 5 Injury Types</h6>
+              </div>
+              <div class="card-body">
+                <div class="chart-container">
+                  <canvas id="typeChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" onclick="loadDashboard()">
+          <i class="fas fa-sync mr-1"></i> Refresh
+        </button>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  var APP = { token: null };
+  var charts = {};
+  
+  window.openDashboard = function(token) {
+    APP.token = token;
+    $('#dashboardModal').modal('show');
+    loadDashboard();
+  };
+  
+  function loadDashboard() {
+    Swal.fire({ title: 'Loading analytics...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    google.script.run
+      .withSuccessHandler(function(res) {
+        Swal.close();
+        if (!res.success) {
+          Swal.fire('Error', res.error || 'Failed to load dashboard', 'error');
+          return;
+        }
+        
+        // Update stat cards
+        $('#stat_total').text(res.totalCases);
+        $('#stat_open').text(res.openCases);
+        $('#stat_closed').text(res.closedCases);
+        $('#stat_avg').text(res.avgDaysToClose);
+        
+        // Trends Chart
+        if (charts.trends) charts.trends.destroy();
+        var trendsCtx = document.getElementById('trendsChart').getContext('2d');
+        charts.trends = new Chart(trendsCtx, {
+          type: 'line',
+          data: {
+            labels: res.monthLabels,
+            datasets: [{
+              label: 'Injuries',
+              data: res.monthCounts,
+              borderColor: 'rgb(75, 192, 192)',
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              tension: 0.4,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 }
+              }
+            }
+          }
+        });
+        
+        // Department Chart
+        if (charts.dept) charts.dept.destroy();
+        var deptCtx = document.getElementById('deptChart').getContext('2d');
+        var deptLabels = res.top5Depts.map(function(d) { return d.department; });
+        var deptData = res.top5Depts.map(function(d) { return d.count; });
+        charts.dept = new Chart(deptCtx, {
+          type: 'doughnut',
+          data: {
+            labels: deptLabels,
+            datasets: [{
+              data: deptData,
+              backgroundColor: [
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 206, 86, 0.8)',
+                'rgba(75, 192, 192, 0.8)',
+                'rgba(153, 102, 255, 0.8)'
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom' }
+            }
+          }
+        });
+        
+        // Injury Type Chart
+        if (charts.type) charts.type.destroy();
+        var typeCtx = document.getElementById('typeChart').getContext('2d');
+        var typeLabels = res.top5Types.map(function(t) { return t.type; });
+        var typeData = res.top5Types.map(function(t) { return t.count; });
+        charts.type = new Chart(typeCtx, {
+          type: 'bar',
+          data: {
+            labels: typeLabels,
+            datasets: [{
+              label: 'Count',
+              data: typeData,
+              backgroundColor: 'rgba(255, 99, 132, 0.6)',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 }
+              }
+            }
+          }
+        });
+        
+      })
+      .withFailureHandler(function(err) {
+        Swal.close();
+        Swal.fire('Error', err.toString(), 'error');
+      })
+      .getDashboardStats(APP.token);
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  
+  <style>
+    body { background:#f4f6f9; font-family: 'Segoe UI', system-ui, sans-serif; }
+    .topbar { background: linear-gradient(90deg, #0b2a4a 0%, #0f3b67 50%, #164b83 100%); border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .brand { font-weight: 700; letter-spacing: 0.2px; }
+    .provider-card { border: 0; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.15s; height: 100%; }
+    .provider-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+    .hours-table { font-size: 0.85rem; width: 100%; }
+    .hours-table td { padding: 2px 0; }
+    .hours-day { font-weight: 700; color: #0f3b67; width: 50px; }
+    .badge-pill-custom { background-color: #e9ecef; color: #495057; font-weight: 600; padding: 0.4em 0.8em; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark topbar">
+    <div class="container">
+      <a class="navbar-brand brand" href="<?= getScriptUrl() ?>" target="_top">City of Portland FROI System</a>
+      <div class="ml-auto">
+        <a class="text-light mr-3" href="<?= getScriptUrl() ?>" target="_top">Back to Home</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="bg-white border-bottom py-4">
+    <div class="container">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+        <div>
+          <h4 class="mb-1 text-primary font-weight-bold"><i class="fas fa-clinic-medical mr-2"></i>Treatment Providers</h4>
+          <p class="text-muted mb-0">Authorized medical locations for work-related injuries.</p>
+        </div>
+        <div class="mt-3 mt-md-0 w-100" style="max-width: 350px;">
+          <input type="text" id="searchBox" class="form-control form-control-lg" placeholder="Search provider, address...">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container py-4">
+    <div id="providersGrid" class="row">
+      <div class="col-12 text-center text-muted py-5">
+        <div class="spinner-border text-primary mb-2" role="status"></div>
+        <div>Loading directory...</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  var allProviders = [];
+
+  $(function() {
+    // Fetch data from FormService.gs
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res.success) {
+        $('#providersGrid').html('<div class="col-12 text-center text-danger">Unable to load directory data.</div>');
+        return;
+      }
+      allProviders = res.providers || [];
+      renderGrid('');
+    }).getTreatmentProvidersDirectory();
+
+    $('#searchBox').on('input', function() {
+      renderGrid($(this).val());
+    });
+  });
+
+  function renderGrid(query) {
+    var q = (query || '').toLowerCase().trim();
+    var filtered = allProviders.filter(function(p) {
+      if(!q) return true;
+      var text = (p.providerName + " " + p.address + " " + p.phone).toLowerCase();
+      return text.indexOf(q) > -1;
+    });
+
+    var $grid = $('#providersGrid');
+    $grid.empty();
+
+    if(filtered.length === 0) {
+      $grid.html('<div class="col-12 text-center text-muted py-5">No providers match your search.</div>');
+      return;
+    }
+
+    var html = '';
+    filtered.forEach(function(p) {
+      html += `
+        <div class="col-lg-6 mb-4">
+          <div class="card provider-card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge badge-pill badge-pill-custom">Medical Provider</span>
+                ${p.phone ? `<a href="tel:${p.phone}" class="btn btn-sm btn-outline-primary"><i class="fas fa-phone mr-1"></i>Call</a>` : ''}
+              </div>
+              
+              <h5 class="card-title font-weight-bold mb-1">${escapeHtml(p.providerName)}</h5>
+              <p class="card-text text-muted small mb-3">
+                <i class="fas fa-map-marker-alt mr-1"></i> ${escapeHtml(p.address)}<br>
+                ${p.phone ? `<i class="fas fa-phone-alt mr-1"></i> ${escapeHtml(p.phone)}` : ''}
+              </p>
+              
+              <div class="bg-light rounded p-3">
+                <div class="small font-weight-bold text-uppercase text-muted mb-2">Hours of Operation</div>
+                ${renderHoursTable(p.hours)}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    $grid.html(html);
+  }
+
+  function renderHoursTable(h) {
+    if(!h) return '<small>Contact provider for hours.</small>';
+    var days = [
+      {k:'mon', l:'Mon'}, {k:'tue', l:'Tue'}, {k:'wed', l:'Wed'},
+      {k:'thu', l:'Thu'}, {k:'fri', l:'Fri'}, {k:'sat', l:'Sat'}, {k:'sun', l:'Sun'}
+    ];
+    
+    var rows = days.map(d => {
+      var dayData = h[d.k];
+      var isOpen = dayData && dayData.open;
+      var time = isOpen ? (dayData.hours || 'Open') : 'Closed';
+      var style = isOpen ? '' : 'color:#adb5bd;';
+      return `<tr style="${style}"><td class="hours-day">${d.l}</td><td>${escapeHtml(time)}</td></tr>`;
+    }).join('');
+    
+    return `<table class="hours-table"><tbody>${rows}</tbody></table>`;
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+</script>
+
+</body>
+</html>

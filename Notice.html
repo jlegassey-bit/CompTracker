@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body { background-color: #f4f6f9; font-family: 'Segoe UI', system-ui, sans-serif; }
+    .notice-card { max-width: 700px; margin: 40px auto; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border-radius: 12px; overflow: hidden; }
+    .notice-header { background-color: #0f3b67; color: white; padding: 25px; text-align: center; }
+    .notice-body { padding: 30px; background-color: white; }
+    .label-text { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #6c757d; margin-bottom: 4px; font-weight: 700; }
+    .value-text { font-size: 1.05rem; color: #212529; margin-bottom: 20px; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; font-weight: 500; }
+    .highlight-box { background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+    .pre-wrap { white-space: pre-wrap; word-break: break-word; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="notice-card">
+    <div class="notice-header">
+      <h3 class="m-0 font-weight-bold">Injury Update</h3>
+      <p class="m-0 mt-1" style="opacity: 0.9;">Work Restriction Notice</p>
+    </div>
+
+    <div id="loading" class="text-center p-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-2 text-muted">Verifying secure link...</p>
+    </div>
+
+    <div id="content" class="notice-body" style="display:none;">
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="label-text">Employee</div>
+          <div class="value-text" id="nEmp"></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4">
+          <div class="label-text">Entry Date</div>
+          <div class="value-text" id="nDate"></div>
+        </div>
+        <div class="col-md-4">
+          <div class="label-text">Provider</div>
+          <div class="value-text" id="nProv"></div>
+        </div>
+        <div class="col-md-4">
+          <div class="label-text">Appointment</div>
+          <div class="value-text"><span id="nApptD"></span> <small class="text-muted" id="nApptT"></small></div>
+        </div>
+      </div>
+
+      <div class="label-text text-warning mt-2">Current Restrictions</div>
+      <div class="highlight-box">
+        <p class="m-0 pre-wrap" id="nRestr"></p>
+      </div>
+
+      <div class="row mt-4">
+        <div class="col-12"><h5 class="text-primary border-bottom pb-2 mb-3">Follow-up Plan</h5></div>
+        <div class="col-md-4">
+          <div class="label-text">Date</div>
+          <div class="value-text" id="nFolD"></div>
+        </div>
+        <div class="col-md-4">
+          <div class="label-text">Time</div>
+          <div class="value-text" id="nFolT"></div>
+        </div>
+        <div class="col-md-4">
+          <div class="label-text">Provider</div>
+          <div class="value-text" id="nFolP"></div>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 text-right text-muted border-top small">
+        Authorized by: <strong><span id="nAdmin"></span></strong> <span id="nTitle"></span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  window.onload = function() {
+    // These variables are injected by Code.gs > doGet()
+    var rid = "<?= rid ?>";
+    var noticeError = "<?= noticeError ?>"; // 'expired' | 'invalid' | 'missing' | ''
+    var notice = <?!= noticeJson ?>; // Raw JSON object or null
+
+    var $load = document.getElementById('loading');
+    var $content = document.getElementById('content');
+
+    if (noticeError === 'expired') {
+      $load.innerHTML = '<div class="alert alert-warning"><b>Link Expired</b><br>For security, this link is valid for 7 days only.<br>Please request a new update from HR/Safety.</div>';
+      return;
+    }
+
+    if (noticeError !== '' || !notice) {
+      $load.innerHTML = '<div class="alert alert-danger"><b>Invalid Link</b><br>The record may have been moved or the link is broken.</div>';
+      return;
+    }
+
+    // Populate Data
+    document.getElementById('nEmp').innerText = notice.employee || 'Unknown';
+    document.getElementById('nDate').innerText = formatDate(notice.entryDate);
+    document.getElementById('nProv').innerText = notice.provider || '-';
+    document.getElementById('nApptD').innerText = formatDate(notice.apptDate);
+    document.getElementById('nApptT').innerText = notice.apptTime || '';
+    
+    document.getElementById('nRestr').innerText = notice.restrictions || 'No restrictions noted.';
+    
+    document.getElementById('nFolD').innerText = formatDate(notice.followDate);
+    document.getElementById('nFolT').innerText = notice.followTime || '';
+    document.getElementById('nFolP').innerText = notice.followProv || '-';
+    
+    document.getElementById('nAdmin').innerText = notice.adminName || 'System';
+    document.getElementById('nTitle').innerText = notice.adminTitle ? ('(' + notice.adminTitle + ')') : '';
+
+    $load.style.display = 'none';
+    $content.style.display = 'block';
+  };
+
+  function formatDate(d) {
+    if(!d) return '-';
+    var date = new Date(d);
+    // Simple check if date is valid
+    return isNaN(date.getTime()) ? d : date.toLocaleDateString();
+  }
+</script>
+</body>
+</html>

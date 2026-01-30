@@ -1,0 +1,1110 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<!-- Upload Document Modal -->
+<div class="modal fade" id="uploadDocModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-upload mr-2"></i>Upload Document</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="uploadDocType">Document Type *</label>
+          <select class="form-control" id="uploadDocType">
+            <option value="">Select Type...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="uploadDocFile">Select File *</label>
+          <input type="file" class="form-control-file" id="uploadDocFile">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="uploadFileUI()"><i class="fas fa-upload mr-1"></i>Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+
+<style>
+  /* Custom style for Work Days in Calendar */
+  .work-day-highlight {
+    background-color: #d1ecf1 !important; /* Light Blue */
+    border-color: #bee5eb !important;
+    color: #0c5460 !important;
+  }
+  
+  /* Note card styling */
+  .pre-wrap { white-space: pre-wrap; word-break: break-word; }
+  .border-left-danger { border-left-color: #dc3545 !important; }
+  .border-left-primary { border-left-color: #007bff !important; }
+  .border-left-warning { border-left-color: #ffc107 !important; }
+  .border-left-info { border-left-color: #17a2b8 !important; }
+  .border-left-secondary { border-left-color: #6c757d !important; }
+  .border-left-dark { border-left-color: #343a40 !important; }
+  /* Upload modal z-index fix */
+  #uploadDocModal {
+    z-index: 9999 !important;
+  }
+  #uploadDocModal .modal-dialog {
+    z-index: 10000 !important;
+  }
+</style>
+
+<div class="modal fade" id="caseModal" role="dialog" aria-hidden="true" data-backdrop="static">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width:95%;">
+    <div class="modal-content">
+      
+      <div class="modal-header bg-dark text-white py-2">
+        <div class="d-flex align-items-center w-100 justify-content-between">
+          <div>
+            <h5 class="modal-title font-weight-bold mb-0" id="cdTitle">Case Details</h5>
+            <div class="small opacity-75" id="cdSub"></div>
+          </div>
+          <div class="d-flex align-items-center">
+            
+            <div class="btn-group mr-3">
+              <button class="btn btn-sm font-weight-bold" id="btnStatusDisplay" style="background:#e0e0e0;">Loading...</button>
+              <button type="button" class="btn btn-sm btn-light dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"></button>
+              <div class="dropdown-menu dropdown-menu-right">
+                <button class="dropdown-item" type="button" onclick="setStatus('Pending Review')">
+                  <i class="fas fa-exclamation-circle mr-2 text-warning"></i>Mark Pending Review
+                </button>
+                <button class="dropdown-item" type="button" onclick="setStatus('Reviewed - Open')">
+                  <i class="fas fa-folder-open mr-2 text-primary"></i>Mark Reviewed - Open
+                </button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item" type="button" onclick="setStatus('Case Closed')">
+                  <i class="fas fa-check-circle mr-2 text-success"></i>Case Closed
+                </button>
+              </div>
+            </div>
+
+            <button class="btn btn-sm btn-outline-light mr-3" onclick="printCase()"><i class="fas fa-print mr-1"></i> Full Audit PDF</button>
+            
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-body p-0">
+        <div class="row no-gutters" style="min-height: 75vh;">
+          
+          <div class="col-md-2 bg-light border-right">
+            <div class="nav flex-column nav-pills p-3 sticky-top" style="top:0; z-index:1;" id="caseTabs" role="tablist">
+              <a class="nav-link active" data-toggle="pill" href="#tab-overview"><i class="fas fa-file-alt mr-2"></i>FROI Record</a>
+              <a class="nav-link" data-toggle="pill" href="#tab-workinfo"><i class="fas fa-briefcase mr-2"></i>Work Info</a>
+              <a class="nav-link" data-toggle="pill" href="#tab-contacts"><i class="fas fa-address-book mr-2"></i>Contacts</a>
+              <a class="nav-link" data-toggle="pill" href="#tab-restrictions"><i class="fas fa-user-md mr-2"></i>Restrictions</a>
+              <a class="nav-link" data-toggle="pill" href="#tab-losttime"><i class="fas fa-clock mr-2"></i>Lost Time</a>
+              <a class="nav-link" data-toggle="pill" href="#tab-docs"><i class="fas fa-paperclip mr-2"></i>Documents</a>
+              <a class="nav-link" data-toggle="pill" href="#tab-notes"><i class="fas fa-sticky-note mr-2"></i>Admin Notes</a>
+              <a class="nav-link" data-toggle="pill" href="#tab-comms"><i class="fas fa-history mr-2"></i>Comm Log</a>
+            </div>
+          </div>
+
+          <div class="col-md-10">
+            <div class="tab-content p-4">
+              <div class="tab-pane fade show active" id="tab-overview">
+                <div class="d-flex justify-content-between mb-3">
+                  <h6 class="text-primary font-weight-bold text-uppercase">Incident Record</h6>
+                  <div>
+                    <button class="btn btn-sm btn-outline-primary" id="btnEditFroi" onclick="toggleEditMode(true)"><i class="fas fa-edit mr-1"></i> Edit Data</button>
+                    <button class="btn btn-sm btn-success d-none" id="btnSaveFroi" onclick="saveFroiEdits()"><i class="fas fa-save mr-1"></i> Save Changes</button>
+                    <button class="btn btn-sm btn-secondary d-none" id="btnCancelFroi" onclick="toggleEditMode(false)">Cancel</button>
+                  </div>
+                </div>
+                <form id="formFroiEdit">
+                  <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-light small font-weight-bold">Submission Info</div>
+                    <div class="card-body py-2">
+                      <div class="row">
+                        <div class="col-md-3"><small>Completed By</small><input class="form-control form-control-sm froi-field" id="f_comp" readonly></div>
+                        <div class="col-md-3"><small>Email</small><input class="form-control form-control-sm froi-field" id="f_email" readonly></div>
+                        <div class="col-md-3"><small>Submitted At</small><input class="form-control form-control-sm froi-field" id="f_sub" readonly disabled></div>
+                      </div>
+                    </div>
+                  </div>
+                  <h6 class="border-bottom pb-1 mb-2">Incident</h6>
+                  <div class="form-row">
+                    <div class="col-md-3 mb-2"><small>Date</small><input type="date" class="form-control form-control-sm froi-field" id="f_idate" readonly></div>
+                    <div class="col-md-3 mb-2"><small>Time</small><input type="time" class="form-control form-control-sm froi-field" id="f_itime" readonly></div>
+                    <div class="col-md-3 mb-2"><small>Location</small><input class="form-control form-control-sm froi-field" id="f_loc" readonly></div>
+                    <div class="col-md-3 mb-2"><small>Department</small><input class="form-control form-control-sm froi-field" id="f_dept" readonly></div>
+                  </div>
+                  <div class="form-row">
+                    <div class="col-md-3 mb-2"><small>Work Loc</small><input class="form-control form-control-sm froi-field" id="f_wloc" readonly></div>
+                    <div class="col-md-3 mb-2"><small>Landmark</small><input class="form-control form-control-sm froi-field" id="f_land" readonly></div>
+                    <div class="col-md-6 mb-2"><small>Witnesses</small><input class="form-control form-control-sm froi-field" id="f_wit" readonly></div>
+                  </div>
+                  <h6 class="border-bottom pb-1 mb-2 mt-3">Employee</h6>
+                  <div class="form-row">
+                    <div class="col-md-4 mb-2"><small>Name</small><input class="form-control form-control-sm froi-field" id="f_ename" readonly></div>
+                    <div class="col-md-2 mb-2"><small>Number</small><input class="form-control form-control-sm froi-field" id="f_enum" readonly></div>
+                    <div class="col-md-3 mb-2"><small>Phone</small><input class="form-control form-control-sm froi-field" id="f_ephone" readonly></div>
+                    <div class="col-md-3 mb-2"><small>Schedule</small><input class="form-control form-control-sm froi-field" id="f_sched" readonly></div>
+                  </div>
+                  <h6 class="border-bottom pb-1 mb-2 mt-3">Injury</h6>
+                  <div class="form-row">
+                    <div class="col-md-4 mb-2"><small>Cause</small><input class="form-control form-control-sm froi-field" id="f_cause" readonly></div>
+                    <div class="col-md-4 mb-2"><small>Nature</small><input class="form-control form-control-sm froi-field" id="f_nature" readonly></div>
+                    <div class="col-md-4 mb-2"><small>Body Parts</small><input class="form-control form-control-sm froi-field" id="f_parts" readonly></div>
+                  </div>
+                  <div class="form-group mb-2">
+                    <small>Description</small>
+                    <textarea class="form-control froi-field" id="f_desc" rows="3" readonly></textarea>
+                  </div>
+                </form>
+              </div>
+
+              <div class="tab-pane fade" id="tab-workinfo">
+                <h5 class="text-primary font-weight-bold border-bottom pb-2 mb-3">Employee Work Information</h5>
+                <div class="card shadow-sm mb-4">
+                  <div class="card-body">
+                    <div class="form-row align-items-end mb-3">
+                      <div class="col-md-3">
+                        <label class="small font-weight-bold">FROI Schedule Code</label>
+                        <input id="wiCode" class="form-control" readonly>
+                        <small class="text-muted">Imported from FROI</small>
+                      </div>
+                      <div class="col-md-2">
+                         <button class="btn btn-primary btn-block" onclick="parseSchedule()"><i class="fas fa-sync-alt mr-1"></i> Decipher</button>
+                      </div>
+                    </div>
+                    
+                    <div class="form-row mb-3">
+                      <div class="col-md-3">
+                        <label class="small font-weight-bold">Days per Week (x)</label>
+                        <input id="wiDays" class="form-control" type="number" readonly>
+                      </div>
+                      <div class="col-md-3">
+                        <label class="small font-weight-bold">Hours per Day (y)</label>
+                        <input id="wiHours" class="form-control" type="number" readonly>
+                      </div>
+                    </div>
+
+                    <h6 class="font-weight-bold mt-4">Typical Work Days</h6>
+                    <p class="small text-muted">Select the days this employee normally works. This will highlight calendars in Blue.</p>
+                    <div class="btn-group-toggle" data-toggle="buttons" id="daySelector">
+                      <label class="btn btn-outline-secondary"><input type="checkbox" value="1"> Mon</label>
+                      <label class="btn btn-outline-secondary"><input type="checkbox" value="2"> Tue</label>
+                      <label class="btn btn-outline-secondary"><input type="checkbox" value="3"> Wed</label>
+                      <label class="btn btn-outline-secondary"><input type="checkbox" value="4"> Thu</label>
+                      <label class="btn btn-outline-secondary"><input type="checkbox" value="5"> Fri</label>
+                      <label class="btn btn-outline-secondary"><input type="checkbox" value="6"> Sat</label>
+                      <label class="btn btn-outline-secondary"><input type="checkbox" value="0"> Sun</label>
+                    </div>
+
+                    <div class="mt-4">
+                      <button class="btn btn-success" onclick="saveWorkInfo()">Save Work Schedule</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-pane fade" id="tab-contacts">
+                <div class="row">
+                  <div class="col-md-8">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <h5 class="mb-0">Case Contacts</h5>
+                      <button class="btn btn-sm btn-success" onclick="addContactUI()"><i class="fas fa-plus mr-1"></i> Add Contact</button>
+                    </div>
+                    <div class="table-responsive">
+                      <table class="table table-hover bg-white shadow-sm rounded" id="tblContacts">
+                        <thead class="thead-light"><tr><th>Name</th><th>Role</th><th>Phone</th><th>Email</th><th></th></tr></thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="card bg-light border-0">
+                      <div class="card-body">
+                        <h6 class="font-weight-bold mb-3">Communication Checklist</h6>
+                        <ul class="list-group list-group-flush small" id="roleChecklist">
+                          <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center" data-role="PAO/HR Generalist">PAO/HR Generalist <i class="fas fa-circle text-secondary"></i></li>
+                          <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center" data-role="Supervisor">Supervisor <i class="fas fa-circle text-secondary"></i></li>
+                          <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center" data-role="Central HR">Central HR <i class="fas fa-circle text-secondary"></i></li>
+                          <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center" data-role="Safety and Training Officer">Safety and Training Officer <i class="fas fa-circle text-secondary"></i></li>
+                          <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center" data-role="Payroll">Payroll <i class="fas fa-circle text-secondary"></i></li>
+                          <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center" data-role="Manager">Manager <i class="fas fa-circle text-secondary"></i></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-pane fade" id="tab-restrictions">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h5 class="mb-0">Restrictions</h5>
+                  <button class="btn btn-sm btn-success" onclick="addRestrUI()">New Restriction</button>
+                </div>
+                <div id="restrList"></div>
+              </div>
+
+              <div class="tab-pane fade" id="tab-losttime">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h5 class="mb-0">Lost Time</h5>
+                  <div>
+                    <button class="btn btn-sm btn-outline-dark mr-2" onclick="printLostTimeReport()"><i class="fas fa-file-pdf mr-1"></i> Export Report</button>
+                    <button class="btn btn-sm btn-success" onclick="addLostTimeUI()">Add Entry</button>
+                  </div>
+                </div>
+                <table class="table table-bordered bg-white shadow-sm" id="tblLostTime" style="font-size:0.9rem;">
+                  <thead class="thead-light"><tr><th>Type</th><th>Start</th><th>End</th><th>RTW</th><th>Scheduled Days Lost</th><th>Notes</th><th></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+
+              <div class="tab-pane fade" id="tab-docs">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h5 class="mb-0">Documents</h5>
+               <button class="btn btn-sm btn-primary" onclick="openUploadModal()"><i class="fas fa-upload mr-1"></i>Upload</button>
+                </div>
+                <ul class="list-group shadow-sm" id="docsList"></ul>
+              </div>
+
+              <div class="tab-pane fade" id="tab-notes">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h5 class="mb-0">Safety & Admin Follow Up</h5>
+                  <button class="btn btn-sm btn-success" onclick="addNoteUI()"><i class="fas fa-plus mr-1"></i> Add Note</button>
+                </div>
+                <div id="notesList"></div>
+              </div>
+
+              <div class="tab-pane fade" id="tab-comms">
+                <h5 class="mb-3">Audit Log</h5>
+                <table class="table table-sm table-striped bg-white border" id="tblComms">
+                  <thead><tr><th>Date</th><th>Type</th><th>Sender</th><th>Details</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- GLOBAL VARS ---
+  var curCaseId = null;
+  var curFroiData = null; 
+  var curFullDetails = null; 
+  var curWorkDays = []; // e.g. [1,2,3,4,5]
+
+  // --- PROGRESS HELPER ---
+  function showProgress(title, message, icon) {
+    icon = icon || 'spinner'; // 'spinner', 'upload', 'save', 'send'
+    var iconHtml = '';
+    
+    if (icon === 'spinner') {
+      iconHtml = '<div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>';
+    } else if (icon === 'upload') {
+      iconHtml = '<div class="mb-3"><i class="fas fa-cloud-upload-alt text-primary" style="font-size: 3rem; animation: pulse 1.5s infinite;"></i></div>';
+    } else if (icon === 'save') {
+      iconHtml = '<div class="mb-3"><i class="fas fa-save text-success" style="font-size: 3rem;"></i></div>';
+    } else if (icon === 'send') {
+      iconHtml = '<div class="mb-3"><i class="fas fa-paper-plane text-info" style="font-size: 3rem;"></i></div>';
+    }
+    
+    Swal.fire({
+      title: title || 'Processing...',
+      html: `
+        <div class="d-flex flex-column align-items-center">
+          ${iconHtml}
+          <div class="text-muted">${message || 'Please wait...'}</div>
+          <div class="progress mt-3" style="width: 100%; height: 4px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 100%"></div>
+          </div>
+        </div>
+      `,
+      allowOutsideClick: false,
+      showConfirmButton: false
+    });
+  }
+
+  function showSuccess(title, message, timer) {
+    Swal.fire({
+      icon: 'success',
+      title: title || 'Success!',
+      text: message || '',
+      timer: timer || 2000,
+      showConfirmButton: false
+    });
+  }
+
+  // --- REFRESH DETAILS ---
+  function refreshDetails() {
+    google.script.run.withSuccessHandler(res => {
+      if(res.success) {
+        curFullDetails = res;
+        populateSubLists(res);
+        updateChecklist(res.contacts);
+      }
+    }).adminGetCaseDetails(APP.token, curCaseId);
+  }
+
+  // --- INIT --- FIXED: Made globally available
+  window.openCaseDetail = function(rid) {
+    curCaseId = rid;
+    $('#caseTabs a:first').tab('show');
+    toggleEditMode(false); 
+    
+    // Reset placeholders
+    $('#restrList').html('<div class="p-3 text-center"><div class="spinner-border spinner-border-sm"></div></div>');
+    $('#docsList').html('<li class="list-group-item text-muted">Loading...</li>');
+    $('#notesList').html('<div class="p-3 text-center"><div class="spinner-border spinner-border-sm"></div></div>');
+    
+    // Load FROI Data for Overview
+    // Note: Adjust index based on whether we added the Icon column
+    var r = APP.reports.find(x => x[x.length-1] == rid || x[x.length-2] == rid); 
+    
+    if(r) {
+      curFroiData = r; 
+      updateHeaderUI(r);
+      populateFormFields(r);
+      // Pre-fill Work Code from FROI if available (Assuming col 12 is Schedule)
+      $('#wiCode').val(r[12]); 
+    }
+    
+    $('#caseModal').modal('show');
+    
+    // Fetch Details
+    google.script.run.withSuccessHandler(res => {
+      if(res.success) {
+        curFullDetails = res;
+        populateSubLists(res);
+        updateChecklist(res.contacts);
+        
+        // Load Work Schedule
+        if(res.workSchedule) {
+           try {
+             curWorkDays = JSON.parse(res.workSchedule[2]);
+             var hrs = res.workSchedule[3];
+             $('#wiDays').val(curWorkDays.length);
+             $('#wiHours').val(hrs);
+             
+             // Set Buttons
+             $('#daySelector label').removeClass('active');
+             curWorkDays.forEach(d => {
+               $(`#daySelector input[value="${d}"]`).parent().addClass('active');
+               $(`#daySelector input[value="${d}"]`).prop('checked',true);
+             });
+           } catch(e) { console.log('Sched parse error',e); }
+        } else {
+          // Auto parse if no saved schedule
+          parseSchedule();
+        }
+      }
+    }).adminGetCaseDetails(APP.token, rid);
+  };
+
+  function updateHeaderUI(r) {
+    $('#cdTitle').text(r[7]);
+    $('#cdSub').text("Record #" + curCaseId + " • " + r[3]);
+    var st = r[41] || 'Pending Review'; // Adjust index if shifted
+    
+    var cls = 'btn-light';
+    var bg = '';
+    
+    if(st === 'Pending Review') {
+       bg = 'background-color:#ffc107; border-color:#ffc107; color:#212529;';
+    } else if(st === 'Reviewed - Open') {
+       cls = 'btn-primary';
+    } else if(st === 'Case Closed') {
+       cls = 'btn-success';
+    }
+    
+    $('#btnStatusDisplay')
+      .text(st)
+      .removeClass('btn-light btn-primary btn-success btn-warning')
+      .addClass(bg ? '' : cls)
+      .attr('style', bg);
+  }
+
+  function populateFormFields(r) {
+    $('#f_comp').val(r[0]); $('#f_email').val(r[1]); $('#f_sub').val(formatDate(r[2]));
+    $('#f_idate').val(isoDate(r[3])); $('#f_itime').val(r[4]); $('#f_loc').val(r[5]); $('#f_land').val(r[6]);
+    $('#f_ename').val(r[7]); $('#f_enum').val(r[8]); $('#f_ephone').val(r[9]);
+    $('#f_wloc').val(r[10]); $('#f_sched').val(r[12]);
+    $('#f_dept').val(r[17]); $('#f_wit').val(r[20]);
+    $('#f_parts').val(r[21]); $('#f_cause').val(r[22]); $('#f_nature').val(r[23]);
+    $('#f_desc').val(r[24]);
+  }
+
+  // --- POPULATE LISTS (RESTORED) ---
+  function populateSubLists(res) {
+    // Contacts
+    var hc = ''; 
+    (res.contacts||[]).forEach(c => {
+       hc += `<tr><td>${esc(c[1])}</td><td>${esc(c[2])}</td><td>${esc(c[3])}</td><td>${esc(c[4])}</td><td><button class="btn btn-xs btn-outline-danger" onclick="delContact(${c[5]})">&times;</button></td></tr>`;
+    }); 
+    $('#tblContacts tbody').html(hc);
+
+    // Restrictions
+    var hr = ''; 
+    (res.restrictions||[]).forEach(r => { 
+       var idx = r[r.length-1]; 
+       hr += `<div class="card mb-2"><div class="card-body p-2 d-flex justify-content-between"><div><strong>${esc(r[3])}</strong><p class="mb-0 small">${esc(r[6])}</p></div><div><button class="btn btn-xs btn-info" onclick="sendNoticeUI(${idx})">Notice</button> <button class="btn btn-xs btn-outline-danger" onclick="delRestr(${idx})">&times;</button></div></div></div>`; 
+    }); 
+    $('#restrList').html(hr);
+
+    // Lost Time
+    var hl = ''; 
+    (res.lostTime||[]).forEach(l => {
+       hl += `<tr><td>${esc(l[2])}</td><td>${formatDate(l[3])}</td><td>${formatDate(l[4])}</td><td>${formatDate(l[5])}</td><td>${esc(l[12])}</td><td>${esc(l[8])}</td><td><button class="btn btn-xs btn-outline-danger" onclick="delLT(${l[13]})">&times;</button></td></tr>`;
+    }); 
+    $('#tblLostTime tbody').html(hl);
+    
+       // Docs (Secure View)
+    var hd = ''; 
+    (res.docs||[]).forEach(d => {
+      var fileId = d[2]; 
+      var docType = d[3] || 'Unknown'; // Document Type from col D
+      var uploader = d[4] || 'Unknown'; // Uploader from col E
+      var timestamp = d[5] ? new Date(d[5]).toLocaleString() : 'Unknown'; // Timestamp from col F
+      
+      hd += `<li class="list-group-item d-flex justify-content-between align-items-center">
+        <div class="text-truncate" style="max-width: 60%;">
+           <i class="fas fa-file-alt mr-2 text-muted"></i>${esc(d[1])}
+           <div class="small text-muted">
+             <span class="badge badge-secondary mr-1">${esc(docType)}</span>
+             Uploaded by ${esc(uploader)} on ${timestamp}
+           </div>
+        </div>
+        <div>
+           <button class="btn btn-sm btn-info mr-1" onclick="viewSecureDoc('${fileId}')"><i class="fas fa-eye"></i> View</button>
+           <button class="btn btn-sm btn-outline-danger" onclick="delDoc(${d[d.length-1]})"><i class="fas fa-trash"></i></button>
+        </div>
+      </li>`;
+    });
+    $('#docsList').html(hd || '<li class="list-group-item text-muted text-center">No documents uploaded.</li>');
+
+    // Notes
+    var hn = '';
+    (res.notes || []).forEach(n => {
+      var typeColors = {
+        'Safety Follow Up': 'danger',
+        'Administrative': 'primary',
+        'Follow-Up Action': 'warning',
+        'Medical Update': 'info',
+        'Communication': 'secondary',
+        'General': 'dark'
+      };
+      var badgeColor = typeColors[n[2]] || 'secondary';
+      
+      hn += `
+        <div class="card mb-3 border-left-${badgeColor}" style="border-left-width: 4px !important;">
+          <div class="card-body py-2">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <span class="badge badge-${badgeColor} mr-2">${esc(n[2])}</span>
+                <small class="text-muted">${new Date(n[1]).toLocaleString()}</small>
+              </div>
+              <button class="btn btn-xs btn-outline-danger" onclick="delNote(${n[6]})" title="Delete Note">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <p class="mb-1 pre-wrap">${esc(n[3])}</p>
+            <div class="small text-muted">
+              <i class="fas fa-user mr-1"></i>Added by: ${esc(n[4])}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    $('#notesList').html(hn || '<div class="alert alert-info">No notes added yet. Click "Add Note" to create the first entry.</div>');
+
+    // Comms
+    var hm = ''; 
+    (res.commLog||[]).forEach(c => {
+       hm += `<tr><td>${new Date(c[1]).toLocaleString()}</td><td>${esc(c[2])}</td><td>${esc(c[3])}</td><td>${esc(c[5])}</td></tr>`;
+    }); 
+    $('#tblComms tbody').html(hm);
+  }
+
+  function updateChecklist(contacts) {
+    var roles = ['PAO/HR Generalist', 'Supervisor', 'Central HR', 'Safety and Training Officer', 'Payroll', 'Manager'];
+    roles.forEach(role => {
+      var match = contacts.some(c => c[2] && c[2].toLowerCase().includes(role.toLowerCase()) );
+      var $li = $(`#roleChecklist li[data-role="${role}"]`);
+      if(match) $li.find('i').removeClass('text-secondary fa-circle').addClass('text-success fa-check-circle');
+      else $li.find('i').removeClass('text-success fa-check-circle').addClass('text-secondary fa-circle');
+    });
+  }
+
+  // --- WORK INFO LOGIC ---
+  function parseSchedule() {
+    var code = $('#wiCode').val() || ''; // e.g. "4/10"
+    var parts = code.split('/');
+    if(parts.length === 2) {
+      var d = parseInt(parts[0]);
+      var h = parseInt(parts[1]);
+      $('#wiDays').val(d);
+      $('#wiHours').val(h);
+      
+      // Heuristic defaults
+      if(d === 5) setWorkDays([1,2,3,4,5]);
+      if(d === 4) setWorkDays([1,2,3,4]); 
+    }
+  }
+
+  function setWorkDays(arr) {
+    $('#daySelector label').removeClass('active');
+    $('input[type=checkbox]').prop('checked',false);
+    arr.forEach(d => {
+       $(`#daySelector input[value="${d}"]`).parent().addClass('active');
+       $(`#daySelector input[value="${d}"]`).prop('checked',true);
+    });
+    curWorkDays = arr;
+  }
+
+  function saveWorkInfo() {
+    var days = [];
+    $('#daySelector input:checked').each(function() { days.push(parseInt($(this).val())); });
+    curWorkDays = days;
+    
+    var p = { recordId: curCaseId, code: $('#wiCode').val(), days: days, hours: $('#wiHours').val() };
+    
+    showProgress('Saving Work Schedule', 'Updating calendar highlights...', 'save');
+    google.script.run.withSuccessHandler(()=>{
+      showSuccess('Saved!', 'Work schedule updated successfully');
+    }).adminSaveWorkSchedule(APP.token, p);
+  }
+
+  // --- ADD LOST TIME (BLUE CALENDAR) ---
+  function addLostTimeUI() {
+    Swal.fire({
+      title: 'Log Lost Time',
+      width: '800px',
+      html: `
+        <div class="text-left">
+          <div class="row mb-3">
+             <div class="col-6">
+                <label class="font-weight-bold small">Type</label>
+                <select id="ltType" class="form-control">
+                   <option value="Lost Time Regular">Lost Time Regular</option>
+                   <option value="Lost Time - Overtime/On Call">Lost Time - Overtime/On Call</option>
+                   <option value="Restricted Duty">Restricted Duty</option>
+                </select>
+             </div>
+          </div>
+          <div class="row mb-3">
+             <div class="col-4">
+               <label class="font-weight-bold small">Start Date</label>
+               <input id="ltStart" class="form-control bg-white" placeholder="Select...">
+             </div>
+             <div class="col-4">
+               <label class="font-weight-bold small">End Date</label>
+               <input id="ltEnd" class="form-control bg-white" placeholder="Select...">
+             </div>
+             <div class="col-4">
+               <label class="font-weight-bold small">Return To Work</label>
+               <input id="ltRtw" class="form-control bg-white" placeholder="Select...">
+             </div>
+          </div>
+          <div class="row mb-3">
+             <div class="col-6">
+               <label class="font-weight-bold small">Lost Scheduled Days (Auto-Calc)</label>
+               <input id="lsd" class="form-control" readonly style="background:#f0f2f5; font-weight:bold;">
+               <small class="text-muted">Calculated based on Employee Work Info</small>
+             </div>
+             <div class="col-6">
+                <label class="font-weight-bold small">RTW Status</label>
+                <input id="ltRtwS" class="form-control">
+             </div>
+          </div>
+          <label class="font-weight-bold small">Notes</label>
+          <textarea id="ltNote" class="form-control"></textarea>
+        </div>
+      `,
+      didOpen: () => {
+        var cfg = {
+          onDayCreate: function(dObj, dStr, fp, dayElem) {
+            var dayNum = dayElem.dateObj.getDay(); 
+            if (curWorkDays.includes(dayNum)) {
+              dayElem.classList.add('work-day-highlight');
+            }
+          },
+          onChange: calculateDays
+        };
+        flatpickr("#ltStart", cfg);
+        flatpickr("#ltEnd", cfg);
+        flatpickr("#ltRtw", cfg);
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Save',
+      preConfirm: () => {
+        return {
+          recordId: curCaseId,
+          statusStart: $('#ltType').val(),
+          startDate: $('#ltStart').val(),
+          endDate: $('#ltEnd').val(),
+          rtwDate: $('#ltRtw').val(),
+          rtwStatus: $('#ltRtwS').val(),
+          intermittent: '',
+          notes: $('#ltNote').val(),
+          schedDays: '', 
+          schedHrs: '', 
+          lostSched: $('#lsd').val(),
+          lostCal: '' 
+        }
+      }
+    }).then(r => {
+      if(r.isConfirmed) {
+        showProgress('Saving Lost Time', 'Calculating work days and logging entry...', 'save');
+        google.script.run.withSuccessHandler(()=>{
+          showSuccess('Lost Time Logged!', 'Entry saved successfully');
+          refreshDetails();
+        }).adminSaveLostTime(APP.token, r.value);
+      }
+    });
+  }
+
+  function calculateDays() {
+    var s = document.getElementById('ltStart').value;
+    var e = document.getElementById('ltEnd').value;
+    if(!s || !e) { document.getElementById('lsd').value = ''; return; }
+
+    var start = new Date(s);
+    var end = new Date(e);
+    var count = 0;
+    for (var d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        if(curWorkDays.includes(d.getDay())) {
+            count++;
+        }
+    }
+    document.getElementById('lsd').value = count;
+  }
+
+  // --- SECURE VIEW (DATA URI) ---
+  function viewSecureDoc(fileId) {
+    showProgress('Loading Document', 'Retrieving secure file...', 'spinner');
+    google.script.run.withSuccessHandler(res => {
+      if (!res.success) { Swal.fire('Error', res.error, 'error'); return; }
+      
+      var dataUri = 'data:' + res.mime + ';base64,' + res.data;
+      var contentHtml = '';
+      var width = '90%';
+
+      if (res.mime.indexOf('pdf') > -1) {
+        contentHtml = `<object data="${dataUri}" type="application/pdf" width="100%" height="600px"><div class="p-4"><a href="${dataUri}" download="${res.filename}" class="btn btn-primary">Download PDF</a></div></object>`;
+      } else if (res.mime.indexOf('image') > -1) {
+        contentHtml = `<img src="${dataUri}" style="max-width:100%; max-height:80vh;">`;
+      } else {
+        width = '500px';
+        contentHtml = `<div class="p-4 text-center"><a href="${dataUri}" download="${res.filename}" class="btn btn-primary btn-lg">Download File</a></div>`;
+      }
+
+      Swal.fire({ title: res.filename, html: contentHtml, width: width, showCloseButton: true, showConfirmButton: false, padding: '0' });
+    }).adminGetFileContent(APP.token, fileId);
+  }
+
+  // --- EXPORT REPORT ---
+  function printLostTimeReport() {
+    var w = window.open('', '_blank');
+    w.document.write('<h3>Generating Report...</h3>');
+    
+    var ltReg = 0; var ltRest = 0;
+    var htmlRows = (curFullDetails.lostTime||[]).map(l => {
+        var type = l[2];
+        var days = parseInt(l[12]) || 0;
+        if(type.includes('Restricted')) ltRest += days; else ltReg += days;
+        return `<tr><td>${type}</td><td>${formatDate(l[3])}</td><td>${formatDate(l[4])}</td><td>${days}</td></tr>`;
+    }).join('');
+
+    var html = `<html><head><title>Lost Time Report</title><style>body{font-family:sans-serif; padding:30px;} table{width:100%; border-collapse:collapse; margin-top:20px;} th,td{border:1px solid #ccc; padding:8px; text-align:left;} th{background:#eee;}</style></head><body><h2>Lost Time Report: ${curFroiData[7]}</h2><p><strong>Case ID:</strong> ${curCaseId}</p><div style="display:flex; gap:20px; margin-top:20px;"><div style="background:#ffebee; padding:15px; border:1px solid #f5c6cb;"><strong>Actual Lost Time Days:</strong> <span style="font-size:1.2em">${ltReg}</span></div><div style="background:#fff3cd; padding:15px; border:1px solid #ffeeba;"><strong>Restricted Duty Days:</strong> <span style="font-size:1.2em">${ltRest}</span></div></div><table><thead><tr><th>Type</th><th>Start</th><th>End</th><th>Scheduled Days Lost</th></tr></thead><tbody>${htmlRows}</tbody></table><script>window.print()<\/script></body></html>`;
+    w.document.body.innerHTML = html;
+  }
+
+  // --- ACTIONS ---
+  function setStatus(st) {
+    $('#btnStatusDisplay').text('Saving...');
+    google.script.run.withSuccessHandler(() => {
+      Swal.fire({toast:true, position:'top-end', icon:'success', title:'Status updated', timer:1500, showConfirmButton:false});
+      var r = APP.reports.find(x => x[x.length-1] == curCaseId || x[x.length-2] == curCaseId);
+      if(r) { r[41] = st; updateHeaderUI(r); }
+      if(typeof renderCaseGrid === 'function') renderCaseGrid();
+    }).adminUpdateStatus(APP.token, curCaseId, st);
+  }
+
+ function toggleEditMode(editable) {
+    if(editable) {
+      // 1. Enable Fields
+      $('.froi-field').prop('readonly', false).removeClass('form-control-plaintext').addClass('form-control bg-white');
+      $('#f_sub').prop('readonly', true); // Keep timestamp locked
+      
+      // 2. CONVERT TEXT INPUTS TO DROPDOWNS (using available lists)
+      if(curFullDetails && curFullDetails.lists) {
+         convertInputToSelect('f_nature', curFullDetails.lists.nature);
+         convertInputToSelect('f_cause', curFullDetails.lists.causes);
+         convertInputToSelect('f_parts', curFullDetails.lists.body);
+      }
+
+      // 3. Show Save Buttons
+      $('#btnEditFroi').addClass('d-none');
+      $('#btnSaveFroi, #btnCancelFroi').removeClass('d-none');
+    } else {
+      // Revert Logic (Reloading form resets HTML structure)
+      $('.froi-field').prop('readonly', true).addClass('form-control-plaintext').removeClass('form-control bg-white');
+      $('#btnEditFroi').removeClass('d-none');
+      $('#btnSaveFroi, #btnCancelFroi').addClass('d-none');
+      
+      // Reset HTML to inputs by repopulating
+      if(curFroiData) {
+         // This renders the inputs back as simple text
+         var natureVal = $('#f_nature').val(); // Capture current val if edited
+         // (Ideally, just re-open the case to reset DOM, or rely on populateFormFields)
+         populateFormFields(curFroiData); 
+      }
+    }
+  }
+
+  function convertInputToSelect(id, options) {
+    if(!options || options.length === 0) return;
+    var $input = $('#' + id);
+    var curVal = $input.val();
+    
+    var html = `<select class="form-control froi-field" id="${id}">
+       <option value="${curVal}">${curVal} (Current)</option>`;
+    
+    options.forEach(opt => {
+       if(opt !== curVal) html += `<option value="${opt}">${opt}</option>`;
+    });
+    html += `</select>`;
+    
+    $input.replaceWith(html);
+  }
+
+  function saveFroiEdits() {
+    var p = {
+      completedByName: $('#f_comp').val(), emailAddress: $('#f_email').val(), submittedAt: $('#f_sub').val(),
+      incidentDate: $('#f_idate').val(), incidentTime: $('#f_itime').val(), incidentLocation: $('#f_loc').val(), landmark: $('#f_land').val(),
+      employeeName: $('#f_ename').val(), employeeNumber: $('#f_enum').val(), employeePhone: $('#f_ephone').val(),
+      workLocation: $('#f_wloc').val(), weeklySchedule: $('#f_sched').val(),
+      departmentName: $('#f_dept').val(), witnesses: $('#f_wit').val(),
+      injuredBodyParts: $('#f_parts').val(), primaryCause: $('#f_cause').val(), natureOfInjury: $('#f_nature').val(),
+      description: $('#f_desc').val()
+    };
+    showProgress('Saving FROI Changes', 'Updating incident record...', 'save');
+    google.script.run.withSuccessHandler(() => {
+      showSuccess('Changes Saved!', 'FROI record updated successfully');
+      toggleEditMode(false);
+      refreshCases();
+    }).adminUpdateFroiData(APP.token, curCaseId, p);
+  }
+
+  function addContactUI() { 
+    Swal.fire({
+      title: 'Add Contact', 
+      html: `<div style="text-align:left;">
+        <label>Name*</label><input id="swName" class="form-control mb-2">
+        <label>Role*</label>
+        <select id="swRole" class="form-control mb-2">
+          <option disabled selected>Select...</option>
+          <option>Central HR</option>
+          <option>PAO/HR Generalist</option>
+          <option>Safety and Training Officer</option>
+          <option>Payroll</option>
+          <option>Manager</option>
+          <option>Supervisor</option>
+          <option>Other</option>
+        </select>
+        <label>Phone</label><input id="swPh" class="form-control mb-2">
+        <label>Email</label><input id="swEm" class="form-control">
+      </div>`, 
+      showCancelButton: true, 
+      preConfirm: () => { 
+        var n = $('#swName').val(), r = $('#swRole').val(); 
+        if (!n || !r) { 
+          Swal.showValidationMessage('Name & Role required'); 
+          return false; 
+        } 
+        return [n, r, $('#swPh').val(), $('#swEm').val()]; 
+      }
+    }).then(res => { 
+      if (res.isConfirmed) {
+        showProgress('Saving Contact', 'Adding to case contacts...', 'save');
+        google.script.run.withSuccessHandler(() => { 
+          showSuccess('Contact Added!', 'Successfully added to case');
+          refreshDetails(); 
+        }).adminSaveContact(APP.token, curCaseId, res.value[0], res.value[1], res.value[2], res.value[3]); 
+      } 
+    }); 
+  }
+
+  function addRestrUI() { 
+    Swal.fire({
+      title:'New Restriction',
+      width:'600px',
+      html:`<div class="text-left">
+        <label>Provider</label><input id="rp" class="form-control mb-2">
+        <div class="form-row mb-2">
+          <div class="col"><label>Appt Date</label><input type="date" id="rd" class="form-control"></div>
+          <div class="col"><label>Time</label><input type="time" id="rt" class="form-control"></div>
+        </div>
+        <label>Restrictions</label><textarea id="rr" class="form-control mb-2" rows="3"></textarea>
+        <div class="form-row">
+          <div class="col"><label>Follow-up</label><input type="date" id="fd" class="form-control"></div>
+          <div class="col"><label>Time</label><input type="time" id="ft" class="form-control"></div>
+          <div class="col"><label>Provider</label><input id="fp" class="form-control"></div>
+        </div>
+      </div>`,
+      preConfirm:()=>{
+        return{
+          recordId:curCaseId,
+          provider:$('#rp').val(),
+          apptDate:$('#rd').val(),
+          apptTime:$('#rt').val(),
+          restrictions:$('#rr').val(),
+          followDate:$('#fd').val(),
+          followTime:$('#ft').val(),
+          followProvider:$('#fp').val(),
+          adminName:APP.user.name,
+          adminTitle:APP.user.title
+        }
+      }
+    }).then(r=>{
+      if(r.isConfirmed) {
+        showProgress('Saving Restriction', 'Adding work restriction record...', 'save');
+        google.script.run.withSuccessHandler(()=>{
+          showSuccess('Restriction Added!', 'Work restriction logged successfully');
+          refreshDetails();
+        }).adminSaveRestriction(APP.token,r.value);
+      }
+    }); 
+  }
+
+  function openUploadModal() {
+    // Load document types from settings
+    google.script.run.withSuccessHandler(function(res) {
+      var sel = $('#uploadDocType');
+      sel.empty().append('<option value="">Select Type...</option>');
+      
+      if (res.success && res.rows) {
+        res.rows.forEach(function(t) {
+          sel.append('<option value="' + t.docType + '">' + t.docType + '</option>');
+        });
+      } else {
+        // Fallback to hardcoded list if settings not available
+        var types = ['Email', 'M1', 'Fit for Duty', 'Medical Release', 'Incident Report', 'Witness Statement', 'Photo', 'Other'];
+        types.forEach(function(t) {
+          sel.append('<option value="' + t + '">' + t + '</option>');
+        });
+      }
+      
+      $('#uploadDocFile').val('');
+      $('#uploadDocModal').modal('show');
+    }).settingsGetDocumentTypes(APP.token);
+  }
+
+  function uploadFileUI() { 
+    var f = document.getElementById('uploadDocFile').files[0]; 
+    if (!f) {
+      Swal.fire('Error', 'Please select a file', 'warning');
+      return;
+    }
+    
+    var docType = $('#uploadDocType').val();
+    if (!docType) {
+      Swal.fire('Required', 'Please select a document type', 'warning');
+      return;
+    }
+    
+    $('#uploadDocModal').modal('hide');
+    
+    var uploaderName = APP.user.name || $('#userNameDisplay').text() || 'Admin';
+    
+    var r = new FileReader(); 
+    r.onload = function(e) {
+      showProgress('Uploading Document', 'Processing file: ' + f.name, 'upload');
+      google.script.run.withSuccessHandler(() => {
+        showSuccess('Upload Complete!', 'Document added successfully');
+        refreshDetails();
+      }).adminUploadFile(APP.token, e.target.result, f.name, curCaseId, uploaderName, docType);
+    }; 
+    r.readAsDataURL(f); 
+  }
+
+  function sendNoticeUI(idx) { 
+    Swal.fire({
+      title:'Send Email Notice?',
+      text:"Sends secure link to all case contacts with email addresses.",
+      icon:'question',
+      showCancelButton:true,
+      confirmButtonText:'Send Email'
+    }).then(r=>{
+      if(r.isConfirmed) {
+        showProgress('Sending Notice', 'Emailing secure restriction link...', 'send');
+        google.script.run.withSuccessHandler(res=>{
+          if(res.success) {
+            showSuccess('Notice Sent!', 'Emails delivered successfully');
+          } else {
+            Swal.fire('Error',res.error,'error');
+          }
+          refreshDetails();
+        }).adminSendRestrictionNotice(APP.token,curCaseId,idx);
+      }
+    }); 
+  }
+
+  // --- NOTES FUNCTIONS ---
+  function addNoteUI() {
+    Swal.fire({
+      title: 'Add Admin/Safety Note',
+      width: '700px',
+      html: `
+        <div class="text-left">
+          <label class="font-weight-bold small">Note Type</label>
+          <select id="noteType" class="form-control mb-3">
+            <option value="Safety Follow Up">Safety Follow Up</option>
+            <option value="Administrative">Administrative</option>
+            <option value="Follow-Up Action">Follow-Up Action</option>
+            <option value="Medical Update">Medical Update</option>
+            <option value="Communication">Communication</option>
+            <option value="General">General</option>
+          </select>
+          
+          <label class="font-weight-bold small">Note Details</label>
+          <textarea id="noteText" class="form-control" rows="6" placeholder="Enter detailed notes here..."></textarea>
+          
+          <div class="mt-2 small text-muted">
+            <i class="fas fa-info-circle mr-1"></i>
+            Note will be timestamped and attributed to your account.
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Save Note',
+      confirmButtonColor: '#28a745',
+      preConfirm: () => {
+        var noteText = $('#noteText').val().trim();
+        if (!noteText) {
+          Swal.showValidationMessage('Note text is required');
+          return false;
+        }
+        return {
+          noteType: $('#noteType').val(),
+          noteText: noteText
+        };
+      }
+    }).then(r => {
+      if (r.isConfirmed) {
+        showProgress('Saving Note', 'Adding to case record...', 'save');
+        google.script.run.withSuccessHandler(() => {
+          showSuccess('Note Saved!', 'Successfully added to case');
+          refreshDetails();
+        }).adminSaveNote(
+          APP.token, 
+          curCaseId, 
+          r.value.noteType, 
+          r.value.noteText,
+          APP.user.name,
+          APP.user.email || ''
+        );
+      }
+    });
+  }
+
+  function delNote(rowIdx) {
+    Swal.fire({
+      title: 'Delete Note?',
+      text: 'This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      confirmButtonColor: '#dc3545'
+    }).then(r => {
+      if (r.isConfirmed) {
+        google.script.run.withSuccessHandler(() => {
+          showSuccess('Note Deleted', 'Note removed from case');
+          refreshDetails();
+        }).adminDeleteNote(APP.token, rowIdx);
+      }
+    });
+  }
+
+  function delContact(idx) { if(confirm('Delete?')) google.script.run.withSuccessHandler(()=>refreshDetails()).adminDeleteContact(APP.token, idx); }
+  function delRestr(idx) { if(confirm('Delete?')) google.script.run.withSuccessHandler(()=>refreshDetails()).adminDeleteRestriction(APP.token, idx); }
+  function delLT(idx) { if(confirm('Delete?')) google.script.run.withSuccessHandler(()=>refreshDetails()).adminDeleteLostTime(APP.token, idx); }
+  function delDoc(idx) { if(confirm('Delete?')) google.script.run.withSuccessHandler(()=>refreshDetails()).adminDeleteDocument(APP.token, idx); }
+  function formatDate(d) { if(!d)return ''; var dt=new Date(d); return isNaN(dt)?d:dt.toLocaleDateString(); }
+  function isoDate(d) { if(!d)return ''; var dt=new Date(d); return isNaN(dt)?'':dt.toISOString().split('T')[0]; }
+  function esc(s) { return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'):''; }
+
+  // --- PRINT MAIN CASE ---
+  function printCase() {
+    if(!curFroiData || !curFullDetails) return Swal.fire('Wait','Data still loading...','info');
+    var w = window.open('', '_blank');
+    var d = new Date().toLocaleDateString();
+    var r = curFroiData; var det = curFullDetails;
+    function getUnique(arr, indices) { if(!arr) return []; var seen = {}; return arr.filter(function(item) { var key = indices.map(function(i) { return String(item[i] || '').trim().toLowerCase(); }).join('||'); if(seen[key]) return false; seen[key] = true; return true; }); }
+    function genRows(arr, cols) { if(!arr || !arr.length) return '<tr><td colspan="'+cols.length+'" style="text-align:center;color:#777;">No records</td></tr>'; return arr.map(row => '<tr>' + cols.map(idx => '<td>'+esc(row[idx])+'</td>').join('') + '</tr>').join(''); }
+    
+    var uniqueContacts = getUnique(det.contacts, [1, 2, 4]); 
+    var uniqueRestr = getUnique(det.restrictions, [3, 4, 6]); 
+    var uniqueComm = getUnique(det.commLog, [1, 2, 5]); 
+    var uniqueDocs = getUnique(det.docs, [1]);
+    var uniqueNotes = getUnique(det.notes || [], [1, 2, 3]); // Add notes deduplication
+    
+    // Generate Admin Notes HTML
+    var notesHtml = '';
+    if (uniqueNotes && uniqueNotes.length > 0) {
+      uniqueNotes.forEach(function(n) {
+        notesHtml += `
+          <div style="border-left: 4px solid #0056b3; padding: 10px; margin-bottom: 10px; background: #f8f9fa;">
+            <div style="margin-bottom: 5px;">
+              <strong style="color: #0056b3;">${esc(n[2])}</strong>
+              <span style="color: #666; font-size: 10px; margin-left: 10px;">${new Date(n[1]).toLocaleString()}</span>
+            </div>
+            <div style="margin-bottom: 5px; white-space: pre-wrap;">${esc(n[3])}</div>
+            <div style="font-size: 10px; color: #666;">
+              Added by: ${esc(n[4])}
+            </div>
+          </div>
+        `;
+      });
+    } else {
+      notesHtml = '<div style="text-align:center;color:#777;">No admin notes recorded</div>';
+    }
+    
+    var html = `<html><head><title>Audit #${curCaseId}</title><style>body { font-family: "Segoe UI", sans-serif; padding: 40px; color: #333; font-size:12px; } .header { border-bottom: 2px solid #0056b3; margin-bottom: 20px; padding-bottom: 10px; display:flex; justify-content:space-between; align-items:end; } h1 { margin:0; font-size: 20px; color: #0056b3; } h3 { background:#f0f2f5; padding:5px 10px; margin-top:20px; margin-bottom:10px; font-size:14px; border-left:4px solid #0056b3; } .meta { text-align: right; font-size: 11px; color: #666; } .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom:10px; } .label { font-weight: bold; font-size: 10px; color: #666; text-transform: uppercase; } .val { font-size: 12px; border-bottom: 1px solid #eee; padding-bottom: 2px; min-height:16px; } table { width:100%; border-collapse: collapse; margin-top:5px; } th { text-align:left; background:#eee; font-weight:bold; font-size:11px; padding:4px; border-bottom:1px solid #ccc; } td { padding:4px; border-bottom:1px solid #eee; font-size:11px; vertical-align:top; } .footer { margin-top:40px; border-top:1px solid #ccc; padding-top:10px; font-size:10px; color:#999; text-align:center; }</style></head><body><div class="header"><div><h1>City of Portland - Human Resources</h1><div style="font-size:14px; margin-top:4px;">FROI Audit Record #${curCaseId}</div></div><div class="meta">Generated: ${d}<br>Status: <strong>${r[41]}</strong></div></div><h3>Incident & Employee</h3><div class="grid"><div><div class="label">Employee</div><div class="val">${r[7]} (Phone: ${r[9]})</div></div><div><div class="label">Date/Time</div><div class="val">${r[3]} ${r[4]}</div></div><div><div class="label">Location</div><div class="val">${r[5]}</div></div><div><div class="label">Department</div><div class="val">${r[17]}</div></div><div><div class="label">Cause</div><div class="val">${r[22]}</div></div><div><div class="label">Nature</div><div class="val">${r[23]}</div></div></div><div style="margin-top:10px;"><div class="label">Description</div><div class="val" style="height:auto; padding:5px; background:#fafafa;">${r[24]}</div></div><h3>Contacts</h3><table><thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>Email</th></tr></thead><tbody>${genRows(uniqueContacts, [1,2,3,4])}</tbody></table><h3>Work Restrictions</h3><table><thead><tr><th>Provider</th><th>Appt Date</th><th>Restrictions</th><th>Follow-up</th></tr></thead><tbody>${(uniqueRestr||[]).map(r => `<tr><td>${esc(r[3])}</td><td>${formatDate(r[4])}</td><td>${esc(r[6])}</td><td>${formatDate(r[7])}</td></tr>`).join('')||'<tr><td colspan="4">No records</td></tr>'}</tbody></table><h3>Lost Time</h3><table><thead><tr><th>Status</th><th>Start</th><th>End</th><th>RTW</th><th>Days Lost</th></tr></thead><tbody>${(det.lostTime||[]).map(l => `<tr><td>${esc(l[2])}</td><td>${formatDate(l[3])}</td><td>${formatDate(l[4])}</td><td>${formatDate(l[5])}</td><td>${esc(l[12])}</td></tr>`).join('')||'<tr><td colspan="5">No records</td></tr>'}</tbody></table><h3>Safety & Admin Notes</h3>${notesHtml}<h3>Communication Log</h3><table><thead><tr><th>Date</th><th>Type</th><th>Sender</th><th>Details</th></tr></thead><tbody>${(uniqueComm||[]).map(c => `<tr><td>${new Date(c[1]).toLocaleString()}</td><td>${esc(c[2])}</td><td>${esc(c[3])}</td><td>${esc(c[5])}</td></tr>`).join('')||'<tr><td colspan="4">No records</td></tr>'}</tbody></table><h3>Documents</h3><ul>${(uniqueDocs||[]).map(d => `<li>${esc(d[1])} (Uploaded by ${esc(d[3])})</li>`).join('')||'<li>No documents</li>'}</ul><div class="footer">Confidential Audit Document - Official Use Only</div><script>window.print();<\/script></body></html>`;
+    
+    w.document.write(html); 
+    w.document.close();
+  }
+</script>
+<!-- Upload Document Modal -->
+<div class="modal fade" id="uploadDocModal" tabindex="-1" role="dialog" style="z-index: 9999;">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-upload mr-2"></i>Upload Document</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="uploadDocType">Document Type *</label>
+          <select class="form-control" id="uploadDocType">
+            <option value="">Select Type...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="uploadDocFile">Select File *</label>
+          <input type="file" class="form-control-file" id="uploadDocFile">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="uploadFileUI()"><i class="fas fa-upload mr-1"></i>Upload</button>
+      </div>
+    </div>
+  </div>
+</div>

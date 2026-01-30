@@ -1,0 +1,477 @@
+<div class="modal fade" id="froiModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header" style="background:#0f3b67; color:white;">
+        <div>
+          <h5 class="modal-title mb-0 font-weight-bold">First Report of Injury</h5>
+          <small>Supervisor Submission</small>
+        </div>
+        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+      </div>
+
+      <div class="modal-body bg-light">
+        <div class="alert alert-danger d-none" id="froiErr"></div>
+        <div class="alert alert-success d-none" id="froiOk"></div>
+
+        <form id="froiForm" onsubmit="handleFormSubmit(event)">
+          
+          <h6 class="text-primary font-weight-bold mb-3 border-bottom pb-2">Reporter Information</h6>
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label class="font-weight-bold">Completed By (Name) <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="completedByName" required>
+            </div>
+            <div class="form-group col-md-6">
+              <label class="font-weight-bold">Email Address <span class="text-danger">*</span></label>
+              <input type="email" class="form-control" id="emailAddress" required placeholder="name@portlandmaine.gov">
+            </div>
+          </div>
+
+          <h6 class="text-primary font-weight-bold mb-3 border-bottom pb-2 mt-4">Incident Details</h6>
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label class="font-weight-bold">Incident Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" id="incidentDate" required>
+            </div>
+            <div class="form-group col-md-4">
+              <label class="font-weight-bold">Incident Time <span class="text-danger">*</span></label>
+              <input type="time" class="form-control" id="incidentTime" required>
+            </div>
+            <div class="form-group col-md-4">
+              <label class="font-weight-bold">Location (Address/Area) <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="incidentLocation" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label>Landmark / Nearby Reference</label>
+              <input type="text" class="form-control" id="landmark">
+            </div>
+            <div class="form-group col-md-6">
+              <label class="font-weight-bold">Department <span class="text-danger">*</span></label>
+              <select class="form-control" id="departmentName" required onchange="onDeptChange()">
+                <option value="" disabled selected>Loading...</option>
+              </select>
+              <small class="text-muted">Work Locations will filter based on Department.</small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label class="font-weight-bold">Work Location <span class="text-danger">*</span></label>
+              <select class="form-control" id="workLocation" required disabled>
+                <option value="" disabled selected>Select Department first...</option>
+              </select>
+            </div>
+            <div class="form-group col-md-6">
+              <label>Time Workday Began</label>
+              <input type="time" class="form-control" id="timeWorkdayBegan">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label class="font-weight-bold">Weekly Work Schedule <span class="text-danger">*</span></label>
+              <select class="form-control" id="weeklySchedule" required>
+                <option value="" disabled selected>Select Schedule...</option>
+                <option>5/7.5</option>
+                <option>5/8</option>
+                <option>4/10</option>
+                <option>3/13</option>
+                <option>2/24-5</option>
+                <option>On Call</option>
+                <option>PT-No Set Schedule</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group col-md-6">
+              <label>Second Employer?</label>
+              <select class="form-control" id="secondEmployer" onchange="onSecondEmployerChange()">
+                <option value="">Select...</option>
+                <option>Yes</option>
+                <option>No</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label id="lblSecondEmployerName">Second Employer Name (if applicable)</label>
+            <input type="text" class="form-control" id="secondEmployerName" disabled>
+          </div>
+
+          <h6 class="text-primary font-weight-bold mb-3 border-bottom pb-2 mt-4">Employee Information</h6>
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label class="font-weight-bold">Employee Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="employeeName" required>
+            </div>
+            <div class="form-group col-md-3">
+              <label>Employee Number</label>
+              <input type="text" class="form-control" id="employeeNumber">
+            </div>
+            <div class="form-group col-md-3">
+              <label>Employee Phone</label>
+              <input type="text" class="form-control" id="employeePhone">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label class="font-weight-bold">Normal Duties? <span class="text-danger">*</span></label>
+              <select class="form-control" id="normalDuties" required>
+                <option value="" disabled selected>Select...</option>
+                <option>Yes</option>
+                <option>No</option>
+              </select>
+            </div>
+            <div class="form-group col-md-6">
+              <label>Duties Explained / Modified?</label>
+              <input type="text" class="form-control" id="dutiesExplained">
+            </div>
+          </div>
+
+          <h6 class="text-primary font-weight-bold mb-3 border-bottom pb-2 mt-4">Notifications</h6>
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label>Date Employer Notified</label>
+              <input type="date" class="form-control" id="dateEmployerNotified">
+            </div>
+            <div class="form-group col-md-8">
+              <label>Supervisor Notified (Name/Method)</label>
+              <input type="text" class="form-control" id="supervisorNotified">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Witnesses</label>
+            <input type="text" class="form-control" id="witnesses" placeholder="Names and contact info">
+          </div>
+
+          <h6 class="text-primary font-weight-bold mb-3 border-bottom pb-2 mt-4">Injury Details</h6>
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label class="font-weight-bold">Injured Body Parts <span class="text-danger">*</span></label>
+              <select class="form-control" id="injuredBodyParts" multiple size="5" required></select>
+              <small class="text-muted">Hold Ctrl/Cmd to select multiple.</small>
+            </div>
+            <div class="form-group col-md-6">
+              <label class="font-weight-bold">Primary Cause of Injury <span class="text-danger">*</span></label>
+              <select class="form-control" id="primaryCause" required></select>
+              
+              <label class="mt-3">Type of Injury</label>
+              <select class="form-control" id="natureOfInjury">
+                 <option value="" selected>Select Type of Injury...</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="font-weight-bold">Description of Incident <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="description" rows="4" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Equipment Used (if any)</label>
+            <input type="text" class="form-control" id="equipmentUsed">
+          </div>
+
+          <h6 class="text-primary font-weight-bold mb-3 border-bottom pb-2 mt-4">Treatment</h6>
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label>Treatment Provider</label>
+              <select class="form-control" id="treatmentProvider" onchange="renderProviderDetails()">
+                <option value="">Select Treatment Provider...</option>
+              </select>
+              <div class="small text-info mt-1" id="providerDetails"></div>
+            </div>
+            <div class="form-group col-md-6">
+              <label>Treatment Type</label>
+              <select class="form-control" id="treatmentType">
+                <option value="">Select Treatment...</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label>Medical Provider (if different)</label>
+              <input type="text" class="form-control" id="medicalProvider">
+            </div>
+            <div class="form-group col-md-6">
+              <label>Other Provider / Notes</label>
+              <input type="text" class="form-control" id="otherProvider">
+            </div>
+          </div>
+
+          <h6 class="text-primary font-weight-bold mb-3 border-bottom pb-2 mt-4">Return to Work / Pay</h6>
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label>Return to Shift?</label>
+              <select class="form-control" id="returnToShift">
+                <option value="">Select...</option>
+                <option>Yes</option>
+                <option>No</option>
+              </select>
+            </div>
+            <div class="form-group col-md-4">
+              <label>EH Pay</label>
+              <select class="form-control" id="ehPay">
+                <option value="">Select...</option>
+                <option>Yes</option>
+                <option>No</option>
+              </select>
+            </div>
+            <div class="form-group col-md-4">
+              <label>Reason FD</label>
+              <input type="text" class="form-control" id="reasonFd">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Approvals FD</label>
+            <input type="text" class="form-control" id="approvalsFd">
+          </div>
+
+          <div class="form-group">
+            <label>Additional Notes</label>
+            <textarea class="form-control" id="textNotes" rows="2"></textarea>
+          </div>
+
+          <h6 class="text-primary font-weight-bold mb-3 border-bottom pb-2 mt-4">Primary / Secondary Contact</h6>
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label>Primary Contact Name</label>
+              <input type="text" class="form-control" id="primaryContactName">
+            </div>
+            <div class="form-group col-md-4">
+              <label>Primary Contact Email</label>
+              <input type="email" class="form-control" id="primaryContactEmail">
+            </div>
+            <div class="form-group col-md-4">
+              <label>Primary Contact Phone</label>
+              <input type="text" class="form-control" id="primaryContactPhone">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label>Secondary Contact Name</label>
+              <input type="text" class="form-control" id="secondaryContactName">
+            </div>
+            <div class="form-group col-md-4">
+              <label>Secondary Contact Phone</label>
+              <input type="text" class="form-control" id="secondaryContactPhone">
+            </div>
+            <div class="form-group col-md-4">
+              <label>Secondary Contact Email</label>
+              <input type="email" class="form-control" id="secondaryContactEmail">
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end mt-4">
+            <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary font-weight-bold px-4">
+              <i class="fas fa-paper-plane mr-2"></i>Submit FROI
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Cache for dropdown data
+  var dropdownCache = {
+    departments: [],
+    workLocations: [],
+    primaryCauses: [],
+    treatments: [],
+    bodyParts: [],
+    providers: []
+  };
+
+  function openFroiModal() {
+    $('#froiErr').addClass('d-none').text('');
+    $('#froiOk').addClass('d-none').text('');
+    
+    // Only load if empty
+    if (dropdownCache.departments.length === 0) {
+      loadDropdowns();
+    }
+    
+    $('#froiModal').modal('show');
+  }
+
+  function loadDropdowns() {
+    Swal.fire({ title: 'Loading form data...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    google.script.run.withSuccessHandler(function(res) {
+      Swal.close();
+      if (!res || !res.success) {
+        $('#froiErr').removeClass('d-none').text('Failed to load dropdowns.');
+        return;
+      }
+
+      dropdownCache = res;
+      hydrateFormDropdowns();
+    }).getFroiDropdownData();
+  }
+
+  function hydrateFormDropdowns() {
+    populateSelect('departmentName', dropdownCache.departments);
+    populateSelect('primaryCause', dropdownCache.primaryCauses);
+    populateSelect('natureOfInjury', dropdownCache.injuryTypes);
+    populateSelect('treatmentType', dropdownCache.treatments);
+    populateSelect('injuredBodyParts', dropdownCache.bodyParts);
+    
+    // Providers Logic
+    var pSel = $('#treatmentProvider');
+    pSel.empty().append('<option value="">Select Treatment Provider...</option>');
+    dropdownCache.providers.forEach(function(p) {
+      pSel.append('<option value="' + escapeHtml(p.providerName) + '">' + escapeHtml(p.providerName) + '</option>');
+    });
+
+    onDeptChange(); // Reset Work Locations
+  }
+
+  function populateSelect(id, list) {
+    var sel = $('#' + id);
+    // Keep first option usually
+    var firstText = sel.find('option:first').text();
+    sel.empty().append('<option value="" disabled selected>' + firstText + '</option>');
+    list.forEach(function(item) {
+      sel.append('<option value="' + escapeHtml(item) + '">' + escapeHtml(item) + '</option>');
+    });
+  }
+
+  function onDeptChange() {
+    var dept = $('#departmentName').val();
+    var wlSel = $('#workLocation');
+    wlSel.empty().append('<option value="" disabled selected>Select Work Location...</option>');
+
+    if (!dept) {
+      wlSel.prop('disabled', true);
+      return;
+    }
+
+    var locs = dropdownCache.workLocations.filter(function(w) { return w.department === dept; });
+    
+    if (locs.length > 0) {
+      wlSel.prop('disabled', false);
+      locs.forEach(function(w) {
+        wlSel.append('<option value="' + escapeHtml(w.name) + '">' + escapeHtml(w.name) + '</option>');
+      });
+    } else {
+      wlSel.prop('disabled', true).append('<option>No locations found</option>');
+    }
+  }
+
+  function onSecondEmployerChange() {
+    var val = $('#secondEmployer').val();
+    var isYes = (val === 'Yes');
+    $('#secondEmployerName').prop('disabled', !isYes).prop('required', isYes);
+    if(isYes) $('#lblSecondEmployerName').addClass('font-weight-bold text-danger'); // highlight
+    else $('#lblSecondEmployerName').removeClass('font-weight-bold text-danger');
+  }
+
+  function renderProviderDetails() {
+    var name = $('#treatmentProvider').val();
+    var div = $('#providerDetails');
+    div.text('');
+    if (!name) return;
+
+    var p = dropdownCache.providers.find(x => x.providerName === name);
+    if (p) {
+      var txt = (p.address || '') + (p.phone ? (' | ' + p.phone) : '');
+      div.text(txt);
+    }
+  }
+
+  function handleFormSubmit(e) {
+    e.preventDefault();
+    $('#froiErr').addClass('d-none');
+    
+    // Quick custom validation
+    var dept = $('#departmentName').val();
+    var loc = $('#workLocation').val();
+    if(!dept || !loc) {
+      $('#froiErr').removeClass('d-none').text('Please select a Department and Work Location.');
+      return;
+    }
+
+    // Prepare Payload
+    var payload = {
+      completedByName: val('completedByName'),
+      emailAddress: val('emailAddress'),
+      incidentDate: val('incidentDate'),
+      incidentTime: val('incidentTime'),
+      incidentLocation: val('incidentLocation'),
+      landmark: val('landmark'),
+      departmentName: dept,
+      workLocation: loc,
+      timeWorkdayBegan: val('timeWorkdayBegan'),
+      weeklySchedule: val('weeklySchedule'),
+      secondEmployer: val('secondEmployer'),
+      secondEmployerName: val('secondEmployerName'),
+      
+      employeeName: val('employeeName'),
+      employeeNumber: val('employeeNumber'),
+      employeePhone: val('employeePhone'),
+      normalDuties: val('normalDuties'),
+      dutiesExplained: val('dutiesExplained'),
+      
+      dateEmployerNotified: val('dateEmployerNotified'),
+      supervisorNotified: val('supervisorNotified'),
+      witnesses: val('witnesses'),
+      
+      injuredBodyParts: ($('#injuredBodyParts').val() || []).join(', '),
+      primaryCause: val('primaryCause'),
+      natureOfInjury: val('natureOfInjury'),
+      description: val('description'),
+      equipmentUsed: val('equipmentUsed'),
+      
+      treatmentProvider: val('treatmentProvider'),
+      treatmentType: val('treatmentType'),
+      medicalProvider: val('medicalProvider'),
+      otherProvider: val('otherProvider'),
+      
+      returnToShift: val('returnToShift'),
+      ehPay: val('ehPay'),
+      reasonFd: val('reasonFd'),
+      approvalsFd: val('approvalsFd'),
+      textNotes: val('textNotes'),
+      
+      primaryContactName: val('primaryContactName'),
+      primaryContactEmail: val('primaryContactEmail'),
+      primaryContactPhone: val('primaryContactPhone'),
+      secondaryContactName: val('secondaryContactName'),
+      secondaryContactPhone: val('secondaryContactPhone'),
+      secondaryContactEmail: val('secondaryContactEmail')
+    };
+
+    Swal.fire({ title: 'Submitting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    google.script.run.withSuccessHandler(function(res) {
+      Swal.close();
+      if (res && res.success) {
+        $('#froiModal').modal('hide');
+        document.getElementById('froiForm').reset();
+        onSecondEmployerChange(); // Reset UI state
+        onDeptChange();
+        Swal.fire('Submitted', 'FROI Record #' + res.recordId + ' created successfully.', 'success');
+      } else {
+        $('#froiErr').removeClass('d-none').text(res.error || 'Submission failed.');
+      }
+    }).processForm(payload);
+  }
+
+  function val(id) {
+    return ($('#' + id).val() || '').trim();
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+</script>

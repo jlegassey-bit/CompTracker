@@ -1,0 +1,172 @@
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0 font-weight-bold">Case Management</h5>
+      <button class="btn btn-outline-primary btn-sm" onclick="refreshCases()"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+    </div>
+    
+    <div class="form-row">
+      <div class="col-md-3">
+        <label class="small font-weight-bold text-muted">Department</label>
+        <select id="filterDept" class="form-control form-control-sm" onchange="renderCaseGrid()">
+          <option value="All">All Departments</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="small font-weight-bold text-muted">Work Location</label>
+        <select id="filterDiv" class="form-control form-control-sm" onchange="renderCaseGrid()">
+          <option value="All">All Locations</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="small font-weight-bold text-muted">Date Range</label>
+        <input type="date" id="filterDate" class="form-control form-control-sm" onchange="renderCaseGrid()">
+      </div>
+      <div class="col-md-3">
+        <label class="small font-weight-bold text-muted">Status View</label>
+        <select id="filterStatus" class="form-control form-control-sm" onchange="renderCaseGrid()">
+          <option value="Active" selected>Active Cases (Default)</option>
+          <option value="Pending Review">Pending Review Only</option>
+          <option value="Reviewed - Open">Reviewed - Open Only</option>
+          <option value="Case Closed">Closed Cases Only</option>
+          <option value="All">Show All</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" id="casesTable">
+        <thead class="thead-light">
+          <tr>
+            <th>Date</th>
+            <th>Employee</th>
+            <th>Department</th>
+            <th>Work Location</th>
+            <th>Status</th>
+            <th style="width:50px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="6" class="text-center text-muted py-4">Loading cases...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  function renderCaseGrid() {
+    var rows = APP.reports || [];
+    
+    // 1. Collect Filter Inputs
+    var fDept = $('#filterDept').val();
+    var fDiv = $('#filterDiv').val();
+    var fDate = $('#filterDate').val();
+    var fStatus = $('#filterStatus').val();
+
+    // 2. Populate Dropdowns if empty (first run)
+    if ($('#filterDept option').length <= 1) {
+      var depts = [...new Set(rows.map(r => r[18]).filter(Boolean))].sort();
+      depts.forEach(d => $('#filterDept').append(`<option value="${d}">${d}</option>`));
+      
+      var locs = [...new Set(rows.map(r => r[5]).filter(Boolean))].sort();
+      locs.forEach(l => $('#filterDiv').append(`<option value="${l}">${l}</option>`));
+    }
+
+    // 3. Filter Data
+    var filtered = rows.filter(function(r) {
+      // Dept
+      if (fDept !== 'All' && r[18] !== fDept) return false;
+      // Location
+      if (fDiv !== 'All' && r[5] !== fDiv) return false;
+      // Date (Simple match YYYY-MM-DD against ISO or formatted)
+      if (fDate) {
+         // r[3] is Incident Date
+         var incDate = new Date(r[3]).toISOString().split('T')[0];
+         if(incDate !== fDate) return false;
+      }
+      // Status Logic
+      var st = r[41] || 'Pending Review';
+      if (fStatus === 'Active') {
+        if (st === 'Case Closed') return false;
+      } else if (fStatus !== 'All') {
+        if (st !== fStatus) return false;
+      }
+      
+      return true;
+    });
+
+    // 4. Sort & Group
+    // Priority: Pending Review (1), Reviewed - Open (2), Case Closed (3), Others (99)
+    // Secondary Sort: Date Descending
+    var statusOrder = { "Pending Review": 1, "Reviewed - Open": 2, "Case Closed": 3 };
+    
+    filtered.sort(function(a, b) {
+      var sA = statusOrder[a[41] || 'Pending Review'] || 99;
+      var sB = statusOrder[b[41] || 'Pending Review'] || 99;
+      
+      if (sA !== sB) return sA - sB; // Status Priority
+      
+      // Date Desc
+      var dA = new Date(a[3]).getTime();
+      var dB = new Date(b[3]).getTime();
+      return dB - dA; 
+    });
+
+    // 5. Build HTML
+    var html = '';
+    if(filtered.length === 0) {
+      html = '<tr><td colspan="6" class="text-center text-muted py-5">No cases found matching criteria.</td></tr>';
+    } else {
+      filtered.forEach(function(r) {
+        var rid = r[r.length-1];
+        var st = r[41] || 'Pending Review';
+        
+        // Row Coloring Logic
+        var rowClass = '';
+        var badgeClass = 'badge-secondary';
+        
+        if (st === 'Pending Review') {
+          // "School Bus Yellow" background for row
+          rowClass = 'style="background-color: #ffeeba;"'; // Bootstrap table-warning style
+          badgeClass = 'badge-warning'; // Yellow badge
+        } else if (st === 'Reviewed - Open') {
+          badgeClass = 'badge-primary';
+        } else if (st === 'Case Closed') {
+          badgeClass = 'badge-success';
+        }
+
+        html += `<tr ${rowClass} style="cursor:pointer" onclick="openCaseDetail(${rid})">
+          <td>${formatDate(r[3])}</td>
+          <td class="font-weight-bold text-dark">${esc(r[8])}</td>
+          <td>${esc(r[18])}</td>
+          <td>${esc(r[5])}</td>
+          <td><span class="badge ${badgeClass} p-2">${st}</span></td>
+          <td><button class="btn btn-sm btn-light"><i class="fas fa-chevron-right"></i></button></td>
+        </tr>`;
+      });
+    }
+    
+    $('#casesTable tbody').html(html);
+  }
+
+  function refreshCases() {
+    Swal.fire({title:'Refreshing...', didOpen:()=>Swal.showLoading()});
+    google.script.run.withSuccessHandler(function(res){
+      Swal.close();
+      if(res.success) {
+        APP.reports = res.reports;
+        renderCaseGrid();
+      }
+    }).adminGetCases(APP.token);
+  }
+
+  // Initial Render (called by Reports.html initApp)
+  // We attach a listener to inputs just in case
+  $('#filterDept, #filterDiv, #filterDate, #filterStatus').on('change', renderCaseGrid);
+
+  function formatDate(d) { if(!d) return ''; var dt=new Date(d); return isNaN(dt)?d:dt.toLocaleDateString(); }
+  function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;') : ''; }
+</script>

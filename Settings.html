@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  
+  <style>
+    body { padding: 20px; background-color: #f0f2f5; }
+    .container-fluid { max-width: 1200px; }
+    .modal-header { background-color: #0056b3; color: white; }
+    .admin-info-box { text-align: right; margin-left: 15px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 15px; }
+    .card { border-radius: 10px; }
+    .small-muted { font-size: 0.85rem; color: #6c757d; }
+    .table td, .table th { vertical-align: middle; }
+    .pre-wrap { white-space: pre-wrap; word-break: break-word; }
+    /* Custom Scroll for lists */
+    .list-scroll-area { max-height: 400px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 rounded shadow-sm">
+  <a class="navbar-brand" href="#">FROI Portal</a>
+  <div class="navbar-nav mr-auto">
+    <a class="nav-item nav-link" href="#" id="nav-reports">Back to Reports</a>
+    <a class="nav-item nav-link active" href="#">Settings</a>
+  </div>
+  <div class="navbar-text text-white admin-info-box" id="adminDisplay" style="display:none; line-height: 1.2;"></div>
+</nav>
+
+<div class="container-fluid">
+
+  <div id="loadingCard" class="card p-4">
+    <div class="d-flex align-items-center">
+      <div class="spinner-border text-primary mr-3" role="status"></div>
+      <div>
+        <div class="font-weight-bold">Loading Settings...</div>
+        <div class="small-muted">Validating admin session</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mainSettings" style="display:none;">
+
+    <ul class="nav nav-tabs mb-3" id="settingsTabs" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link active" id="tab-admins" data-toggle="tab" href="#pane-admins" role="tab">Admin Access</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="tab-depts" data-toggle="tab" href="#pane-depts" role="tab">Departments</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="tab-lists" data-toggle="tab" href="#pane-lists" role="tab">Form Lists</a>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+
+      <div class="tab-pane fade show active" id="pane-admins" role="tabpanel">
+        <div class="card p-3 mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="font-weight-bold">Admin Users</div>
+              <div class="small-muted">Add, edit, or remove admin access.</div>
+            </div>
+            <button class="btn btn-primary" onclick="openAdminModal(null)"><i class="fas fa-user-plus"></i> Add Admin</button>
+          </div>
+        </div>
+
+        <div class="card p-3">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered bg-white mb-0">
+              <thead class="thead-light">
+                <tr>
+                  <th style="width: 260px;">Email</th>
+                  <th style="width: 180px;">Name</th>
+                  <th>Title</th>
+                  <th style="width: 200px;">Department</th>
+                  <th style="width: 140px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminsBody">
+                <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="pane-depts" role="tabpanel">
+        <div class="card p-3 mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="font-weight-bold">Departments</div>
+              <div class="small-muted">Each department can have required role contacts (HR, Payroll, Safety/Training).</div>
+            </div>
+            <button class="btn btn-primary" onclick="openDeptModal(null)"><i class="fas fa-plus"></i> Add Department</button>
+          </div>
+        </div>
+
+        <div class="card p-3">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered bg-white mb-0">
+              <thead class="thead-light">
+                <tr>
+                  <th>Department</th>
+                  <th style="width: 230px;">Contacts</th>
+                  <th style="width: 160px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="deptsBody">
+                <tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="pane-lists" role="tabpanel">
+        <div class="row">
+            
+            <div class="col-md-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                  <h6 class="mb-0">Nature of Injury (Type)</h6>
+                  <button class="btn btn-sm btn-light" onclick="addListItemUI('nature')"><i class="fas fa-plus"></i></button>
+                </div>
+                <div class="card-body p-0 list-scroll-area">
+                  <ul class="list-group list-group-flush" id="list-nature">
+                     <li class="list-group-item text-center"><div class="spinner-border spinner-border-sm"></div></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                  <h6 class="mb-0">Primary Causes</h6>
+                  <button class="btn btn-sm btn-light" onclick="addListItemUI('causes')"><i class="fas fa-plus"></i></button>
+                </div>
+                <div class="card-body p-0 list-scroll-area">
+                   <ul class="list-group list-group-flush" id="list-causes"></ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                  <h6 class="mb-0">Body Parts</h6>
+                  <button class="btn btn-sm btn-light" onclick="addListItemUI('body')"><i class="fas fa-plus"></i></button>
+                </div>
+                <div class="card-body p-0 list-scroll-area">
+                   <ul class="list-group list-group-flush" id="list-body"></ul>
+                </div>
+              </div>
+            </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="adminModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="adminModalTitle">Admin</h5>
+        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body bg-light">
+        <input type="hidden" id="adminRow">
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label class="small font-weight-bold">Email</label>
+            <input type="email" class="form-control" id="adminEmail" placeholder="name@portlandmaine.gov">
+          </div>
+          <div class="form-group col-md-6">
+            <label class="small font-weight-bold">Name</label>
+            <input type="text" class="form-control" id="adminName">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label class="small font-weight-bold">Title</label>
+            <input type="text" class="form-control" id="adminTitle">
+          </div>
+          <div class="form-group col-md-6">
+            <label class="small font-weight-bold">Department</label>
+            <input type="text" class="form-control" id="adminDept">
+          </div>
+        </div>
+        <div id="adminErr" class="alert alert-danger d-none"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="saveAdmin()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="deptModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deptModalTitle">Department</h5>
+        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body bg-light">
+        <input type="hidden" id="deptRow">
+        <div class="form-group">
+          <label class="small font-weight-bold">Department Name</label>
+          <input type="text" class="form-control" id="deptName">
+        </div>
+        <div id="deptErr" class="alert alert-danger d-none"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="saveDept()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="deptContactsModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Department Contacts</h5>
+        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body bg-light">
+        <input type="hidden" id="dcDeptName">
+        <div class="mb-2">
+          <div class="font-weight-bold" id="dcTitle"></div>
+          <div class="small-muted">These contacts will be used by future workflow features.</div>
+        </div>
+        <div class="card p-3 mb-3">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="small-muted font-weight-bold">PAO/HR Generalist</div>
+              <input class="form-control mb-2" id="dc_hr_name" placeholder="Name">
+              <input class="form-control mb-2" id="dc_hr_email" placeholder="Email">
+              <input class="form-control" id="dc_hr_phone" placeholder="Phone">
+            </div>
+            <div class="col-md-4">
+              <div class="small-muted font-weight-bold">Payroll Specialist/Manager</div>
+              <input class="form-control mb-2" id="dc_pr_name" placeholder="Name">
+              <input class="form-control mb-2" id="dc_pr_email" placeholder="Email">
+              <input class="form-control" id="dc_pr_phone" placeholder="Phone">
+            </div>
+            <div class="col-md-4">
+              <div class="small-muted font-weight-bold">Safety and Training Officer</div>
+              <input class="form-control mb-2" id="dc_sa_name" placeholder="Name">
+              <input class="form-control mb-2" id="dc_sa_email" placeholder="Email">
+              <input class="form-control" id="dc_sa_phone" placeholder="Phone">
+            </div>
+          </div>
+        </div>
+        <div id="dcErr" class="alert alert-danger d-none"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button class="btn btn-primary" onclick="saveDeptContacts()">Save Contacts</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  var token = "<?= token ?>";
+  var admins = [];
+  var depts = [];
+  var currentUser = {};
+
+  $(document).ready(function() {
+    google.script.run.withSuccessHandler(function(url) {
+      $('#nav-reports').attr('href', url + '?page=reports');
+    }).getScriptUrl();
+
+    boot();
+  });
+
+  function boot() {
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res.success) {
+        $('#loadingCard').html(
+          '<div class="alert alert-danger mb-0"><b>Session expired.</b><br>' +
+          'Return to Reports and log in again.</div>'
+        );
+        return;
+      }
+
+      currentUser = res.user || {};
+      $('#adminDisplay').html('<b>' + (currentUser.name || 'Admin') + '</b><br><small>' + (currentUser.title || '') + '</small>').show();
+
+      $('#loadingCard').hide();
+      $('#mainSettings').show();
+
+      refreshAdmins();
+      refreshDepts();
+      refreshLists(); // Load the new lists
+
+    }).validateAdminSession(token);
+  }
+
+  // --- ADMIN FUNCTIONS ---
+  function refreshAdmins() {
+    $('#adminsBody').html('<tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>');
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res.success) return showTableError('#adminsBody', 5, res.error);
+      admins = res.rows || [];
+      renderAdmins();
+    }).settingsGetAdmins(token);
+  }
+
+  function renderAdmins() {
+    if (!admins.length) {
+      $('#adminsBody').html('<tr><td colspan="5" class="text-center text-muted">No admins found.</td></tr>');
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < admins.length; i++) {
+      var a = admins[i];
+      html += '<tr>' +
+        '<td>' + esc(a.email) + '</td>' +
+        '<td>' + esc(a.name) + '</td>' +
+        '<td>' + esc(a.title) + '</td>' +
+        '<td>' + esc(a.department) + '</td>' +
+        '<td class="text-center">' +
+          '<button class="btn btn-sm btn-outline-primary mr-1" onclick="openAdminModal(' + i + ')"><i class="fas fa-edit"></i></button>' +
+          '<button class="btn btn-sm btn-outline-danger" onclick="deleteAdmin(' + a.row + ')"><i class="fas fa-trash"></i></button>' +
+        '</td>' +
+      '</tr>';
+    }
+    $('#adminsBody').html(html);
+  }
+
+  function openAdminModal(index) {
+    $('#adminErr').addClass('d-none').text('');
+    if (index === null || index === undefined) {
+      $('#adminModalTitle').text('Add Admin');
+      $('#adminRow').val('');
+      $('#adminEmail').val('');
+      $('#adminName').val('');
+      $('#adminTitle').val('');
+      $('#adminDept').val('');
+    } else {
+      var a = admins[index];
+      $('#adminModalTitle').text('Edit Admin');
+      $('#adminRow').val(a.row);
+      $('#adminEmail').val(a.email);
+      $('#adminName').val(a.name);
+      $('#adminTitle').val(a.title);
+      $('#adminDept').val(a.department);
+    }
+    $('#adminModal').modal('show');
+  }
+
+  function saveAdmin() {
+    var row = $('#adminRow').val();
+    var payload = {
+      email: $('#adminEmail').val(),
+      name: $('#adminName').val(),
+      title: $('#adminTitle').val(),
+      department: $('#adminDept').val()
+    };
+    $('#adminErr').addClass('d-none').text('');
+    var done = function(res) {
+      if (!res.success) {
+        $('#adminErr').removeClass('d-none').text(res.error);
+        return;
+      }
+      $('#adminModal').modal('hide');
+      refreshAdmins();
+    };
+    if (row) google.script.run.withSuccessHandler(done).settingsUpdateAdmin(token, row, payload);
+    else google.script.run.withSuccessHandler(done).settingsAddAdmin(token, payload);
+  }
+
+  function deleteAdmin(rowIdx) {
+    if (!confirm('Delete this admin user?')) return;
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res.success) { alert(res.error); return; }
+      refreshAdmins();
+    }).settingsDeleteAdmin(token, rowIdx);
+  }
+
+  // --- DEPARTMENT FUNCTIONS ---
+  function refreshDepts() {
+    $('#deptsBody').html('<tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>');
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res.success) return showTableError('#deptsBody', 3, res.error);
+      depts = res.rows || [];
+      renderDepts();
+    }).settingsGetDepartments(token);
+  }
+
+  function renderDepts() {
+    if (!depts.length) {
+      $('#deptsBody').html('<tr><td colspan="3" class="text-center text-muted">No departments found.</td></tr>');
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < depts.length; i++) {
+      var d = depts[i];
+      html += '<tr>' +
+        '<td>' + esc(d.department) + '</td>' +
+        '<td class="text-center">' +
+          '<button class="btn btn-sm btn-outline-secondary" onclick="openDeptContacts(\'' + escAttr(d.department) + '\')">' +
+            '<i class="fas fa-address-book"></i> Manage Contacts' +
+          '</button>' +
+        '</td>' +
+        '<td class="text-center">' +
+          '<button class="btn btn-sm btn-outline-primary mr-1" onclick="openDeptModal(' + i + ')"><i class="fas fa-edit"></i></button>' +
+          '<button class="btn btn-sm btn-outline-danger" onclick="deleteDept(' + d.row + ')"><i class="fas fa-trash"></i></button>' +
+        '</td>' +
+      '</tr>';
+    }
+    $('#deptsBody').html(html);
+  }
+
+  function openDeptModal(index) {
+    $('#deptErr').addClass('d-none').text('');
+    if (index === null || index === undefined) {
+      $('#deptModalTitle').text('Add Department');
+      $('#deptRow').val('');
+      $('#deptName').val('');
+    } else {
+      var d = depts[index];
+      $('#deptModalTitle').text('Edit Department');
+      $('#deptRow').val(d.row);
+      $('#deptName').val(d.department);
+    }
+    $('#deptModal').modal('show');
+  }
+
+  function saveDept() {
+    var row = $('#deptRow').val();
+    var name = $('#deptName').val();
+    $('#deptErr').addClass('d-none').text('');
+    var done = function(res) {
+      if (!res.success) {
+        $('#deptErr').removeClass('d-none').text(res.error);
+        return;
+      }
+      $('#deptModal').modal('hide');
+      refreshDepts();
+    };
+    if (row) google.script.run.withSuccessHandler(done).settingsUpdateDepartment(token, row, name);
+    else google.script.run.withSuccessHandler(done).settingsAddDepartment(token, name);
+  }
+
+  function deleteDept(rowIdx) {
+    if (!confirm('Delete this department? This will also remove its Dept_Contacts rows.')) return;
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res.success) { alert(res.error); return; }
+      refreshDepts();
+    }).settingsDeleteDepartment(token, rowIdx);
+  }
+
+  function openDeptContacts(deptName) {
+    $('#dcErr').addClass('d-none').text('');
+    $('#dcDeptName').val(deptName);
+    $('#dcTitle').text(deptName);
+    $('#dc_hr_name,#dc_hr_email,#dc_hr_phone').val('');
+    $('#dc_pr_name,#dc_pr_email,#dc_pr_phone').val('');
+    $('#dc_sa_name,#dc_sa_email,#dc_sa_phone').val('');
+
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res.success) {
+        $('#dcErr').removeClass('d-none').text(res.error);
+        $('#deptContactsModal').modal('show');
+        return;
+      }
+      var c = res.contacts || {};
+      if (c["PAO/HR Generalist"]) {
+        $('#dc_hr_name').val(c["PAO/HR Generalist"].name || '');
+        $('#dc_hr_email').val(c["PAO/HR Generalist"].email || '');
+        $('#dc_hr_phone').val(c["PAO/HR Generalist"].phone || '');
+      }
+      if (c["Payroll Specialist/Manager"]) {
+        $('#dc_pr_name').val(c["Payroll Specialist/Manager"].name || '');
+        $('#dc_pr_email').val(c["Payroll Specialist/Manager"].email || '');
+        $('#dc_pr_phone').val(c["Payroll Specialist/Manager"].phone || '');
+      }
+      if (c["Safety and Training Officer"]) {
+        $('#dc_sa_name').val(c["Safety and Training Officer"].name || '');
+        $('#dc_sa_email').val(c["Safety and Training Officer"].email || '');
+        $('#dc_sa_phone').val(c["Safety and Training Officer"].phone || '');
+      }
+      $('#deptContactsModal').modal('show');
+    }).settingsGetDeptContacts(token, deptName);
+  }
+
+  function saveDeptContacts() {
+    var deptName = $('#dcDeptName').val();
+    var payload = {
+      "PAO/HR Generalist": { name: $('#dc_hr_name').val(), email: $('#dc_hr_email').val(), phone: $('#dc_hr_phone').val() },
+      "Payroll Specialist/Manager": { name: $('#dc_pr_name').val(), email: $('#dc_pr_email').val(), phone: $('#dc_pr_phone').val() },
+      "Safety and Training Officer": { name: $('#dc_sa_name').val(), email: $('#dc_sa_email').val(), phone: $('#dc_sa_phone').val() }
+    };
+    $('#dcErr').addClass('d-none').text('');
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res.success) {
+        $('#dcErr').removeClass('d-none').text(res.error);
+        return;
+      }
+      $('#deptContactsModal').modal('hide');
+      Swal.fire('Saved', 'Department contacts saved.', 'success');
+    }).settingsSaveDeptContacts(token, deptName, payload);
+  }
+
+  // --- NEW LIST MANAGEMENT FUNCTIONS ---
+  function refreshLists() {
+    google.script.run.withSuccessHandler(renderFormLists).adminGetSettingsData(APP.token || token);
+  }
+
+  function renderFormLists(res) {
+    if(!res.success) { console.error(res.error); return; }
+    renderUL('list-nature', res.nature, 'nature');
+    renderUL('list-causes', res.causes, 'causes');
+    renderUL('list-body', res.body, 'body');
+  }
+
+  function renderUL(elId, items, category) {
+    var html = '';
+    if(!items || items.length === 0) {
+      html = '<li class="list-group-item text-muted small text-center">No items found.</li>';
+    } else {
+      items.forEach((item, idx) => {
+        html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                   ${esc(item)}
+                   <button class="btn btn-xs btn-outline-danger" onclick="deleteListItem('${category}', ${idx})">&times;</button>
+                 </li>`;
+      });
+    }
+    document.getElementById(elId).innerHTML = html;
+  }
+
+  function addListItemUI(cat) {
+    Swal.fire({
+      title: 'Add New Item',
+      input: 'text',
+      showCancelButton: true,
+      confirmButtonText: 'Add',
+      preConfirm: (val) => {
+        if(!val) Swal.showValidationMessage('Value required');
+        return val;
+      }
+    }).then(r => {
+      if(r.isConfirmed) {
+        google.script.run.withSuccessHandler(refreshLists).adminAddSettingItem(token, cat, r.value);
+      }
+    });
+  }
+
+  function deleteListItem(cat, idx) {
+    Swal.fire({
+      title: 'Delete Item?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'No'
+    }).then(result => {
+      if(result.isConfirmed) {
+        google.script.run.withSuccessHandler(refreshLists).adminDeleteSettingItem(token, cat, idx);
+      }
+    });
+  }
+
+  // UTILS
+  function showTableError(selector, colSpan, msg) {
+    $(selector).html('<tr><td colspan="' + colSpan + '" class="text-center text-danger">' + esc(msg) + '</td></tr>');
+  }
+  function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+  function escAttr(s) { return esc(s).replace(/"/g, '&quot;'); }
+</script>
+
+</body>
+</html>

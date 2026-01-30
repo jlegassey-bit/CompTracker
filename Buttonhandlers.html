@@ -1,0 +1,52 @@
+<script>
+// BUTTON HANDLERS - ENSURES FUNCTIONS ARE ALWAYS AVAILABLE
+// This file bridges button clicks to modal functions
+
+// Global function for opening case details
+// Called by: View_AdminDashboard.html table row clicks
+window.openCaseDetail = function(rid) {
+  console.log('openCaseDetail called for:', rid);
+  
+  // Wait for modal to be loaded if needed
+  var checkModal = setInterval(function() {
+    if (typeof window.openCaseDetailModal === 'function') {
+      clearInterval(checkModal);
+      window.openCaseDetailModal(rid);
+    }
+  }, 50);
+  
+  // Timeout after 3 seconds
+  setTimeout(function() {
+    clearInterval(checkModal);
+    if (typeof window.openCaseDetailModal !== 'function') {
+      console.error('Modal_CaseDetail not loaded');
+      Swal.fire('Error', 'Case detail modal failed to load. Please refresh the page.', 'error');
+    }
+  }, 3000);
+};
+
+// Global function for opening settings
+// Called by: Settings button in Reports.html
+window.openSettingsModal = function() {
+  console.log('openSettingsModal called');
+  
+  // Wait for modal to be loaded if needed
+  var checkModal = setInterval(function() {
+    if (typeof window.openSettingsModalReal === 'function') {
+      clearInterval(checkModal);
+      window.openSettingsModalReal();
+    }
+  }, 50);
+  
+  // Timeout after 3 seconds
+  setTimeout(function() {
+    clearInterval(checkModal);
+    if (typeof window.openSettingsModalReal !== 'function') {
+      console.error('Modal_Settings not loaded');
+      Swal.fire('Error', 'Settings modal failed to load. Please refresh the page.', 'error');
+    }
+  }, 3000);
+};
+
+console.log('ButtonHandlers.html loaded - openCaseDetail and openSettingsModal available');
+</script>

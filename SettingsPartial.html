@@ -1,0 +1,1508 @@
+<!-- SETTINGS MODAL (ADMIN ONLY) -->
+<div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-cog mr-2"></i>Settings</h5>
+        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+      </div>
+
+      <div class="modal-body bg-light">
+        <ul class="nav nav-pills mb-3" id="settingsTabs" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" id="tab-admins-link" data-toggle="pill" href="#tab-admins" role="tab">
+              <i class="fas fa-user-shield mr-1"></i> Admin Access
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" id="tab-depts-link" data-toggle="pill" href="#tab-depts" role="tab">
+              <i class="fas fa-building mr-1"></i> Departments
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" id="tab-worklocs-link" data-toggle="pill" href="#tab-worklocs" role="tab">
+              <i class="fas fa-map-marker-alt mr-1"></i> Work Locations
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" id="tab-causes-link" data-toggle="pill" href="#tab-causes" role="tab">
+              <i class="fas fa-exclamation-triangle mr-1"></i> Primary Causes
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" id="tab-treatments-link" data-toggle="pill" href="#tab-treatments" role="tab">
+              <i class="fas fa-notes-medical mr-1"></i> Treatments
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" id="tab-providers-link" data-toggle="pill" href="#tab-providers" role="tab">
+              <i class="fas fa-clinic-medical mr-1"></i> Treatment Providers
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" id="tab-bodyparts-link" data-toggle="pill" href="#tab-bodyparts" role="tab">
+              <i class="fas fa-user-injured mr-1"></i> Body Parts
+            </a>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="settingsTabsContent">
+          <!-- ADMINS TAB -->
+          <div class="tab-pane fade show active" id="tab-admins" role="tabpanel">
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="mb-0">Admin Users</h6>
+                    <small class="text-muted">Add, edit, or remove admin access.</small>
+                  </div>
+                  <button class="btn btn-sm btn-primary" onclick="openAdminForm()">
+                    <i class="fas fa-plus mr-1"></i> Add Admin
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mb-3" id="adminFormCard" style="display:none;">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0" id="adminFormTitle">Add Admin</h6>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="closeAdminForm()">Close</button>
+                </div>
+
+                <input type="hidden" id="admRowIdx">
+                <div class="form-row">
+                  <div class="form-group col-md-4">
+                    <label class="small font-weight-bold">Email</label>
+                    <input type="email" class="form-control form-control-sm" id="admEmail" placeholder="name@portlandmaine.gov">
+                  </div>
+                  <div class="form-group col-md-3">
+                    <label class="small font-weight-bold">Name</label>
+                    <input type="text" class="form-control form-control-sm" id="admName">
+                  </div>
+                  <div class="form-group col-md-3">
+                    <label class="small font-weight-bold">Title</label>
+                    <input type="text" class="form-control form-control-sm" id="admTitle">
+                  </div>
+                  <div class="form-group col-md-2">
+                    <label class="small font-weight-bold">Department</label>
+                    <input type="text" class="form-control form-control-sm" id="admDept">
+                  </div>
+                </div>
+
+                <button class="btn btn-success" onclick="saveAdminRow()">
+                  <i class="fas fa-save mr-1"></i> Save
+                </button>
+                <button class="btn btn-outline-secondary ml-2" onclick="closeAdminForm()">Cancel</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered bg-white">
+                <thead class="thead-light">
+                  <tr>
+                    <th style="width:240px;">Email</th>
+                    <th style="width:180px;">Name</th>
+                    <th style="width:180px;">Title</th>
+                    <th>Department</th>
+                    <th style="width:120px;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="adminsTbody">
+                  <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- DEPARTMENTS TAB -->
+          <div class="tab-pane fade" id="tab-depts" role="tabpanel">
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="mb-0">Departments & Default Contacts</h6>
+                    <small class="text-muted">Each department stores key contacts used for future features.</small>
+                  </div>
+                  <button class="btn btn-sm btn-primary" onclick="openDeptForm()">
+                    <i class="fas fa-plus mr-1"></i> Add Department
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mb-3" id="deptFormCard" style="display:none;">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0" id="deptFormTitle">Add Department</h6>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="closeDeptForm()">Close</button>
+                </div>
+
+                <input type="hidden" id="deptRowIdx">
+
+                <div class="form-group">
+                  <label class="small font-weight-bold">Department Name</label>
+                  <input type="text" class="form-control form-control-sm" id="deptName">
+                </div>
+
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="border rounded p-2 mb-2 bg-light">
+                      <div class="font-weight-bold small text-uppercase text-muted">PAO/HR Generalist</div>
+                      <div class="form-group mb-1">
+                        <label class="small mb-0">Name</label>
+                        <input type="text" class="form-control form-control-sm" id="hrName">
+                      </div>
+                      <div class="form-group mb-1">
+                        <label class="small mb-0">Email</label>
+                        <input type="email" class="form-control form-control-sm" id="hrEmail">
+                      </div>
+                      <div class="form-group mb-0">
+                        <label class="small mb-0">Phone</label>
+                        <input type="text" class="form-control form-control-sm" id="hrPhone">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="border rounded p-2 mb-2 bg-light">
+                      <div class="font-weight-bold small text-uppercase text-muted">Payroll Specialist/Manager</div>
+                      <div class="form-group mb-1">
+                        <label class="small mb-0">Name</label>
+                        <input type="text" class="form-control form-control-sm" id="payrollName">
+                      </div>
+                      <div class="form-group mb-1">
+                        <label class="small mb-0">Email</label>
+                        <input type="email" class="form-control form-control-sm" id="payrollEmail">
+                      </div>
+                      <div class="form-group mb-0">
+                        <label class="small mb-0">Phone</label>
+                        <input type="text" class="form-control form-control-sm" id="payrollPhone">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="border rounded p-2 mb-2 bg-light">
+                      <div class="font-weight-bold small text-uppercase text-muted">Safety & Training Officer</div>
+                      <div class="form-group mb-1">
+                        <label class="small mb-0">Name</label>
+                        <input type="text" class="form-control form-control-sm" id="safetyName">
+                      </div>
+                      <div class="form-group mb-1">
+                        <label class="small mb-0">Email</label>
+                        <input type="email" class="form-control form-control-sm" id="safetyEmail">
+                      </div>
+                      <div class="form-group mb-0">
+                        <label class="small mb-0">Phone</label>
+                        <input type="text" class="form-control form-control-sm" id="safetyPhone">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button class="btn btn-success" onclick="saveDeptRow()">
+                  <i class="fas fa-save mr-1"></i> Save
+                </button>
+                <button class="btn btn-outline-secondary ml-2" onclick="closeDeptForm()">Cancel</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered bg-white">
+                <thead class="thead-light">
+                  <tr>
+                    <th style="width:220px;">Department</th>
+                    <th>HR</th>
+                    <th>Payroll</th>
+                    <th>Safety</th>
+                    <th style="width:120px;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="deptsTbody">
+                  <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
+                </tbody>
+              </table>
+              <small class="text-muted">Updates are stored in the “Departments” sheet and timestamped.</small>
+            </div>
+          </div>
+
+          <!-- WORK LOCATIONS TAB -->
+          <div class="tab-pane fade" id="tab-worklocs" role="tabpanel">
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="mb-0">Work Locations</h6>
+                    <small class="text-muted">Each Work Location must be assigned to a Department.</small>
+                  </div>
+                  <button class="btn btn-sm btn-primary" onclick="openWorkLocForm()">
+                    <i class="fas fa-plus mr-1"></i> Add Work Location
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mb-3" id="workLocFormCard" style="display:none;">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0" id="workLocFormTitle">Add Work Location</h6>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="closeWorkLocForm()">Close</button>
+                </div>
+
+                <input type="hidden" id="wlRowIdx">
+
+                <div class="form-row">
+                  <div class="form-group col-md-6">
+                    <label class="small font-weight-bold">Work Location</label>
+                    <input type="text" class="form-control form-control-sm" id="wlName" placeholder="e.g., Riverside Yard, 212 Canco Rd, etc.">
+                  </div>
+
+                  <div class="form-group col-md-6">
+                    <label class="small font-weight-bold">Department</label>
+                    <select class="form-control form-control-sm" id="wlDept">
+                      <option value="" disabled selected>Select Department...</option>
+                    </select>
+                    <small class="text-muted">Departments are managed in the Departments tab.</small>
+                  </div>
+                </div>
+
+                <button class="btn btn-success" onclick="saveWorkLocRow()">
+                  <i class="fas fa-save mr-1"></i> Save
+                </button>
+                <button class="btn btn-outline-secondary ml-2" onclick="closeWorkLocForm()">Cancel</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered bg-white">
+                <thead class="thead-light">
+                  <tr>
+                    <th>Work Location</th>
+                    <th style="width:260px;">Department</th>
+                    <th style="width:220px;">Updated</th>
+                    <th style="width:120px;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="workLocsTbody">
+                  <tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
+                </tbody>
+              </table>
+              <small class="text-muted">Updates are stored in the “WorkLocations” sheet.</small>
+            </div>
+          </div>
+
+          <!-- PRIMARY CAUSES TAB -->
+          <div class="tab-pane fade" id="tab-causes" role="tabpanel">
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="mb-0">Primary Causes of Injury</h6>
+                    <small class="text-muted">Master list for the Primary Cause field.</small>
+                  </div>
+                  <button class="btn btn-sm btn-primary" onclick="openCauseForm()">
+                    <i class="fas fa-plus mr-1"></i> Add Primary Cause
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mb-3" id="causeFormCard" style="display:none;">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0" id="causeFormTitle">Add Primary Cause</h6>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="closeCauseForm()">Close</button>
+                </div>
+
+                <input type="hidden" id="causeRowIdx">
+                <div class="form-group">
+                  <label class="small font-weight-bold">Primary Cause</label>
+                  <input type="text" class="form-control form-control-sm" id="causeText">
+                </div>
+
+                <button class="btn btn-success" onclick="saveCauseRow()">
+                  <i class="fas fa-save mr-1"></i> Save
+                </button>
+                <button class="btn btn-outline-secondary ml-2" onclick="closeCauseForm()">Cancel</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered bg-white">
+                <thead class="thead-light">
+                  <tr>
+                    <th>Primary Cause</th>
+                    <th style="width:220px;">Updated</th>
+                    <th style="width:120px;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="causesTbody">
+                  <tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>
+                </tbody>
+              </table>
+              <small class="text-muted">Updates are stored in the “PrimaryCauses” sheet.</small>
+            </div>
+          </div>
+
+          <!-- TREATMENTS TAB -->
+          <div class="tab-pane fade" id="tab-treatments" role="tabpanel">
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="mb-0">Treatments</h6>
+                    <small class="text-muted">Master list for the Treatment field.</small>
+                  </div>
+                  <button class="btn btn-sm btn-primary" onclick="openTreatmentForm()">
+                    <i class="fas fa-plus mr-1"></i> Add Treatment
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mb-3" id="treatmentFormCard" style="display:none;">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0" id="treatmentFormTitle">Add Treatment</h6>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="closeTreatmentForm()">Close</button>
+                </div>
+
+                <input type="hidden" id="treatmentRowIdx">
+                <div class="form-group">
+                  <label class="small font-weight-bold">Treatment</label>
+                  <input type="text" class="form-control form-control-sm" id="treatmentText">
+                </div>
+
+                <button class="btn btn-success" onclick="saveTreatmentRow()">
+                  <i class="fas fa-save mr-1"></i> Save
+                </button>
+                <button class="btn btn-outline-secondary ml-2" onclick="closeTreatmentForm()">Cancel</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered bg-white">
+                <thead class="thead-light">
+                  <tr>
+                    <th>Treatment</th>
+                    <th style="width:220px;">Updated</th>
+                    <th style="width:120px;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="treatmentsTbody">
+                  <tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>
+                </tbody>
+              </table>
+              <small class="text-muted">Updates are stored in the “Treatments” sheet.</small>
+            </div>
+          </div>
+
+          <!-- PROVIDERS TAB -->
+          <div class="tab-pane fade" id="tab-providers" role="tabpanel">
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="mb-0">Treatment Providers</h6>
+                    <small class="text-muted">Provider Name, Address, Phone, and weekly hours.</small>
+                  </div>
+                  <button class="btn btn-sm btn-primary" onclick="openProviderForm()">
+                    <i class="fas fa-plus mr-1"></i> Add Provider
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mb-3" id="providerFormCard" style="display:none;">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0" id="providerFormTitle">Add Provider</h6>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="closeProviderForm()">Close</button>
+                </div>
+
+                <input type="hidden" id="provRowIdx">
+
+                <div class="form-row">
+                  <div class="form-group col-md-5">
+                    <label class="small font-weight-bold">Provider Name</label>
+                    <input type="text" class="form-control form-control-sm" id="provName">
+                  </div>
+                  <div class="form-group col-md-4">
+                    <label class="small font-weight-bold">Address</label>
+                    <input type="text" class="form-control form-control-sm" id="provAddress">
+                  </div>
+                  <div class="form-group col-md-3">
+                    <label class="small font-weight-bold">Phone</label>
+                    <input type="text" class="form-control form-control-sm" id="provPhone">
+                  </div>
+                </div>
+
+                <div class="border rounded p-2 bg-light">
+                  <div class="small font-weight-bold mb-2">Days Open & Hours</div>
+
+                  <div class="row small font-weight-bold text-muted">
+                    <div class="col-3">Day</div>
+                    <div class="col-2">Open</div>
+                    <div class="col-7">Hours (only if open)</div>
+                  </div>
+
+                  <div class="row align-items-center py-1">
+                    <div class="col-3">Mon</div>
+                    <div class="col-2"><input type="checkbox" id="provMonOpen"></div>
+                    <div class="col-7"><input type="text" class="form-control form-control-sm" id="provMonHours" placeholder="e.g., 8:00 AM - 5:00 PM"></div>
+                  </div>
+                  <div class="row align-items-center py-1">
+                    <div class="col-3">Tue</div>
+                    <div class="col-2"><input type="checkbox" id="provTueOpen"></div>
+                    <div class="col-7"><input type="text" class="form-control form-control-sm" id="provTueHours" placeholder="e.g., 8:00 AM - 5:00 PM"></div>
+                  </div>
+                  <div class="row align-items-center py-1">
+                    <div class="col-3">Wed</div>
+                    <div class="col-2"><input type="checkbox" id="provWedOpen"></div>
+                    <div class="col-7"><input type="text" class="form-control form-control-sm" id="provWedHours" placeholder="e.g., 8:00 AM - 5:00 PM"></div>
+                  </div>
+                  <div class="row align-items-center py-1">
+                    <div class="col-3">Thu</div>
+                    <div class="col-2"><input type="checkbox" id="provThuOpen"></div>
+                    <div class="col-7"><input type="text" class="form-control form-control-sm" id="provThuHours" placeholder="e.g., 8:00 AM - 5:00 PM"></div>
+                  </div>
+                  <div class="row align-items-center py-1">
+                    <div class="col-3">Fri</div>
+                    <div class="col-2"><input type="checkbox" id="provFriOpen"></div>
+                    <div class="col-7"><input type="text" class="form-control form-control-sm" id="provFriHours" placeholder="e.g., 8:00 AM - 5:00 PM"></div>
+                  </div>
+                  <div class="row align-items-center py-1">
+                    <div class="col-3">Sat</div>
+                    <div class="col-2"><input type="checkbox" id="provSatOpen"></div>
+                    <div class="col-7"><input type="text" class="form-control form-control-sm" id="provSatHours" placeholder="e.g., 9:00 AM - 12:00 PM"></div>
+                  </div>
+                  <div class="row align-items-center py-1">
+                    <div class="col-3">Sun</div>
+                    <div class="col-2"><input type="checkbox" id="provSunOpen"></div>
+                    <div class="col-7"><input type="text" class="form-control form-control-sm" id="provSunHours" placeholder="e.g., Closed"></div>
+                  </div>
+
+                  <small class="text-muted">Tip: if a day is unchecked, the hours are ignored.</small>
+                </div>
+
+                <div class="mt-3">
+                  <button class="btn btn-success" onclick="saveProviderRow()">
+                    <i class="fas fa-save mr-1"></i> Save
+                  </button>
+                  <button class="btn btn-outline-secondary ml-2" onclick="closeProviderForm()">Cancel</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered bg-white">
+                <thead class="thead-light">
+                  <tr>
+                    <th>Provider</th>
+                    <th style="width:260px;">Phone</th>
+                    <th>Address</th>
+                    <th>Days / Hours</th>
+                    <th style="width:220px;">Updated</th>
+                    <th style="width:120px;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="providersTbody">
+                  <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
+                </tbody>
+              </table>
+              <small class="text-muted">Updates are stored in the “TreatmentProviders” sheet.</small>
+            </div>
+          </div>
+
+          <!-- BODY PARTS TAB -->
+          <div class="tab-pane fade" id="tab-bodyparts" role="tabpanel">
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="mb-0">Body Parts (Injury Location)</h6>
+                    <small class="text-muted">Master list for injured body part/location selections.</small>
+                  </div>
+                  <button class="btn btn-sm btn-primary" onclick="openBodyPartForm()">
+                    <i class="fas fa-plus mr-1"></i> Add Body Part
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mb-3" id="bodyPartFormCard" style="display:none;">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0" id="bodyPartFormTitle">Add Body Part</h6>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="closeBodyPartForm()">Close</button>
+                </div>
+
+                <input type="hidden" id="bodyPartRowIdx">
+                <div class="form-group">
+                  <label class="small font-weight-bold">Body Part</label>
+                  <input type="text" class="form-control form-control-sm" id="bodyPartText" placeholder="e.g., Shoulder, Lower Back, Wrist">
+                </div>
+
+                <button class="btn btn-success" onclick="saveBodyPartRow()">
+                  <i class="fas fa-save mr-1"></i> Save
+                </button>
+                <button class="btn btn-outline-secondary ml-2" onclick="closeBodyPartForm()">Cancel</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered bg-white">
+                <thead class="thead-light">
+                  <tr>
+                    <th>Body Part</th>
+                    <th style="width:220px;">Updated</th>
+                    <th style="width:120px;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="bodyPartsTbody">
+                  <tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>
+                </tbody>
+              </table>
+              <small class="text-muted">Updates are stored in the “BodyParts” sheet.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Cache departments for dropdown
+  var settingsDeptCache = [];
+
+  function openSettingsModal() {
+    if (!currentEmail) return;
+
+    $('#tab-admins-link').tab('show');
+
+    closeAdminForm();
+    closeDeptForm();
+    closeWorkLocForm();
+    closeCauseForm();
+    closeTreatmentForm();
+    closeProviderForm();
+    closeBodyPartForm();
+
+    loadAdminsTable();
+    loadDepartmentsTable();
+    loadWorkLocationsTable();
+    loadPrimaryCausesTable();
+    loadTreatmentsTable();
+    loadProvidersTable();
+    loadBodyPartsTable();
+
+    $('#settingsModal').modal('show');
+  }
+
+  // ---------------- ADMINS ----------------
+  function loadAdminsTable() {
+    $('#adminsTbody').html('<tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>');
+
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || !res.success) {
+        $('#adminsTbody').html('<tr><td colspan="5" class="text-center text-danger">Unable to load admins.</td></tr>');
+        return;
+      }
+
+      var rows = res.rows || [];
+      if (rows.length === 0) {
+        $('#adminsTbody').html('<tr><td colspan="5" class="text-center text-muted">No admins found.</td></tr>');
+        return;
+      }
+
+      var html = '';
+      rows.forEach(function(a) {
+        var safe = JSON.stringify(a).replace(/"/g, "&quot;");
+        html += `<tr>
+          <td>${escapeHtml(a.email)}</td>
+          <td>${escapeHtml(a.name)}</td>
+          <td>${escapeHtml(a.title)}</td>
+          <td>${escapeHtml(a.department)}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-primary mr-1" onclick="editAdmin(${safe})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deleteAdminRow(${a.rowIdx})"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>`;
+      });
+
+      $('#adminsTbody').html(html);
+    }).listAdmins(currentEmail);
+  }
+
+  function openAdminForm() {
+    $('#adminFormTitle').text('Add Admin');
+    $('#admRowIdx').val('');
+    $('#admEmail,#admName,#admTitle,#admDept').val('');
+    $('#adminFormCard').show();
+  }
+
+  function closeAdminForm() {
+    $('#adminFormCard').hide();
+    $('#admRowIdx').val('');
+    $('#admEmail,#admName,#admTitle,#admDept').val('');
+  }
+
+  function editAdmin(a) {
+    $('#adminFormTitle').text('Edit Admin');
+    $('#admRowIdx').val(a.rowIdx);
+    $('#admEmail').val(a.email);
+    $('#admName').val(a.name);
+    $('#admTitle').val(a.title);
+    $('#admDept').val(a.department);
+    $('#adminFormCard').show();
+  }
+
+  function saveAdminRow() {
+    var rowIdx = $('#admRowIdx').val();
+    var payload = {
+      email: ($('#admEmail').val() || '').trim(),
+      name: ($('#admName').val() || '').trim(),
+      title: ($('#admTitle').val() || '').trim(),
+      department: ($('#admDept').val() || '').trim()
+    };
+
+    if (!payload.email) {
+      Swal.fire('Missing', 'Email is required.', 'warning');
+      return;
+    }
+
+    Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    if (rowIdx) {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Saved', 'Admin updated.', 'success');
+          closeAdminForm();
+          loadAdminsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to update admin.', 'error');
+        }
+      }).updateAdmin(currentEmail, rowIdx, payload);
+    } else {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Saved', 'Admin added.', 'success');
+          closeAdminForm();
+          loadAdminsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to add admin.', 'error');
+        }
+      }).addAdmin(currentEmail, payload);
+    }
+  }
+
+  function deleteAdminRow(rowIdx) {
+    Swal.fire({
+      title: 'Delete admin?',
+      text: 'This removes admin access for that user.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete'
+    }).then(function(r) {
+      if (!r.isConfirmed) return;
+
+      Swal.fire({ title: 'Deleting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Deleted', 'Admin removed.', 'success');
+          loadAdminsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to delete admin.', 'error');
+        }
+      }).deleteAdmin(currentEmail, rowIdx);
+    });
+  }
+
+  // ------------- DEPARTMENTS -------------
+  function loadDepartmentsTable() {
+    $('#deptsTbody').html('<tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>');
+
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || !res.success) {
+        $('#deptsTbody').html('<tr><td colspan="5" class="text-center text-danger">Unable to load departments.</td></tr>');
+        settingsDeptCache = [];
+        return;
+      }
+
+      var rows = res.rows || [];
+      settingsDeptCache = rows;
+
+      if (rows.length === 0) {
+        $('#deptsTbody').html('<tr><td colspan="5" class="text-center text-muted">No departments found.</td></tr>');
+        return;
+      }
+
+      var html = '';
+      rows.forEach(function(d) {
+        var safe = JSON.stringify(d).replace(/"/g, "&quot;");
+        html += `<tr>
+          <td><b>${escapeHtml(d.department)}</b><div class="text-muted small">${escapeHtml(d.updated || '')}</div></td>
+          <td class="small">${escapeHtml(d.hrName)}<br>${escapeHtml(d.hrEmail)}<br>${escapeHtml(d.hrPhone)}</td>
+          <td class="small">${escapeHtml(d.payrollName)}<br>${escapeHtml(d.payrollEmail)}<br>${escapeHtml(d.payrollPhone)}</td>
+          <td class="small">${escapeHtml(d.safetyName)}<br>${escapeHtml(d.safetyEmail)}<br>${escapeHtml(d.safetyPhone)}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-primary mr-1" onclick="editDept(${safe})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deleteDeptRow(${d.rowIdx})"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>`;
+      });
+
+      $('#deptsTbody').html(html);
+    }).listDepartments(currentEmail);
+  }
+
+  function openDeptForm() {
+    $('#deptFormTitle').text('Add Department');
+    $('#deptRowIdx').val('');
+    $('#deptName,#hrName,#hrEmail,#hrPhone,#payrollName,#payrollEmail,#payrollPhone,#safetyName,#safetyEmail,#safetyPhone').val('');
+    $('#deptFormCard').show();
+  }
+
+  function closeDeptForm() {
+    $('#deptFormCard').hide();
+    $('#deptRowIdx').val('');
+    $('#deptName,#hrName,#hrEmail,#hrPhone,#payrollName,#payrollEmail,#payrollPhone,#safetyName,#safetyEmail,#safetyPhone').val('');
+  }
+
+  function editDept(d) {
+    $('#deptFormTitle').text('Edit Department');
+    $('#deptRowIdx').val(d.rowIdx);
+    $('#deptName').val(d.department);
+    $('#hrName').val(d.hrName);
+    $('#hrEmail').val(d.hrEmail);
+    $('#hrPhone').val(d.hrPhone);
+    $('#payrollName').val(d.payrollName);
+    $('#payrollEmail').val(d.payrollEmail);
+    $('#payrollPhone').val(d.payrollPhone);
+    $('#safetyName').val(d.safetyName);
+    $('#safetyEmail').val(d.safetyEmail);
+    $('#safetyPhone').val(d.safetyPhone);
+    $('#deptFormCard').show();
+  }
+
+  function saveDeptRow() {
+    var rowIdx = $('#deptRowIdx').val();
+    var payload = {
+      department: ($('#deptName').val() || '').trim(),
+      hrName: ($('#hrName').val() || '').trim(),
+      hrEmail: ($('#hrEmail').val() || '').trim(),
+      hrPhone: ($('#hrPhone').val() || '').trim(),
+      payrollName: ($('#payrollName').val() || '').trim(),
+      payrollEmail: ($('#payrollEmail').val() || '').trim(),
+      payrollPhone: ($('#payrollPhone').val() || '').trim(),
+      safetyName: ($('#safetyName').val() || '').trim(),
+      safetyEmail: ($('#safetyEmail').val() || '').trim(),
+      safetyPhone: ($('#safetyPhone').val() || '').trim()
+    };
+
+    if (!payload.department) {
+      Swal.fire('Missing', 'Department name is required.', 'warning');
+      return;
+    }
+
+    Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    if (rowIdx) {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Saved', 'Department updated.', 'success');
+          closeDeptForm();
+          loadDepartmentsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to update department.', 'error');
+        }
+      }).updateDepartment(currentEmail, rowIdx, payload);
+    } else {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Saved', 'Department added.', 'success');
+          closeDeptForm();
+          loadDepartmentsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to add department.', 'error');
+        }
+      }).addDepartment(currentEmail, payload);
+    }
+  }
+
+  function deleteDeptRow(rowIdx) {
+    Swal.fire({
+      title: 'Delete department?',
+      text: 'This removes the department and its stored contacts.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete'
+    }).then(function(r) {
+      if (!r.isConfirmed) return;
+
+      Swal.fire({ title: 'Deleting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Deleted', 'Department removed.', 'success');
+          loadDepartmentsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to delete department.', 'error');
+        }
+      }).deleteDepartment(currentEmail, rowIdx);
+    });
+  }
+
+  // ------------- WORK LOCATIONS -------------
+  function loadWorkLocationsTable() {
+    $('#workLocsTbody').html('<tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>');
+
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || !res.success) {
+        $('#workLocsTbody').html('<tr><td colspan="4" class="text-center text-danger">Unable to load work locations.</td></tr>');
+        return;
+      }
+
+      var rows = res.rows || [];
+      if (rows.length === 0) {
+        $('#workLocsTbody').html('<tr><td colspan="4" class="text-center text-muted">No work locations found.</td></tr>');
+        return;
+      }
+
+      var html = '';
+      rows.forEach(function(w) {
+        var safe = JSON.stringify(w).replace(/"/g, "&quot;");
+        html += `<tr>
+          <td><b>${escapeHtml(w.workLocation)}</b></td>
+          <td>${escapeHtml(w.department || '')}</td>
+          <td>${escapeHtml(w.updated || '')}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-primary mr-1" onclick="editWorkLoc(${safe})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deleteWorkLocRow(${w.rowIdx})"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>`;
+      });
+
+      $('#workLocsTbody').html(html);
+    }).listWorkLocations(currentEmail);
+  }
+
+  function ensureDeptDropdownLoaded(selectedDept) {
+    return new Promise(function(resolve) {
+      if (!settingsDeptCache || settingsDeptCache.length === 0) {
+        google.script.run.withSuccessHandler(function(res) {
+          settingsDeptCache = (res && res.success && res.rows) ? res.rows : [];
+          renderDeptDropdown(selectedDept);
+          resolve();
+        }).listDepartments(currentEmail);
+      } else {
+        renderDeptDropdown(selectedDept);
+        resolve();
+      }
+    });
+  }
+
+  function renderDeptDropdown(selectedDept) {
+    var sel = $('#wlDept');
+    sel.empty();
+    sel.append('<option value="" disabled>Select Department...</option>');
+
+    (settingsDeptCache || []).forEach(function(d) {
+      var name = (d.department || '').trim();
+      if (!name) return;
+      sel.append(`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`);
+    });
+
+    if (selectedDept) {
+      sel.val(selectedDept);
+    } else {
+      sel.prop('selectedIndex', 0);
+    }
+  }
+
+  async function openWorkLocForm() {
+    $('#workLocFormTitle').text('Add Work Location');
+    $('#wlRowIdx').val('');
+    $('#wlName').val('');
+    $('#workLocFormCard').show();
+
+    await ensureDeptDropdownLoaded('');
+    $('#wlDept').val('');
+  }
+
+  function closeWorkLocForm() {
+    $('#workLocFormCard').hide();
+    $('#wlRowIdx').val('');
+    $('#wlName').val('');
+    $('#wlDept').empty().append('<option value="" disabled selected>Select Department...</option>');
+  }
+
+  async function editWorkLoc(w) {
+    $('#workLocFormTitle').text('Edit Work Location');
+    $('#wlRowIdx').val(w.rowIdx);
+    $('#wlName').val(w.workLocation || '');
+    $('#workLocFormCard').show();
+
+    await ensureDeptDropdownLoaded((w.department || '').trim());
+  }
+
+  function saveWorkLocRow() {
+    var rowIdx = $('#wlRowIdx').val();
+    var name = ($('#wlName').val() || '').trim();
+    var dept = ($('#wlDept').val() || '').trim();
+
+    if (!name) { Swal.fire('Missing', 'Work Location is required.', 'warning'); return; }
+    if (!dept) { Swal.fire('Missing', 'Department is required.', 'warning'); return; }
+
+    Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    if (rowIdx) {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Saved', 'Work Location updated.', 'success');
+          closeWorkLocForm();
+          loadWorkLocationsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to update work location.', 'error');
+        }
+      }).updateWorkLocation(currentEmail, rowIdx, name, dept);
+    } else {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Saved', 'Work Location added.', 'success');
+          closeWorkLocForm();
+          loadWorkLocationsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to add work location.', 'error');
+        }
+      }).addWorkLocation(currentEmail, name, dept);
+    }
+  }
+
+  function deleteWorkLocRow(rowIdx) {
+    Swal.fire({
+      title: 'Delete work location?',
+      text: 'This removes the work location from the master list.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete'
+    }).then(function(r) {
+      if (!r.isConfirmed) return;
+
+      Swal.fire({ title: 'Deleting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Deleted', 'Work Location removed.', 'success');
+          loadWorkLocationsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to delete work location.', 'error');
+        }
+      }).deleteWorkLocation(currentEmail, rowIdx);
+    });
+  }
+
+  // ------------- PRIMARY CAUSES -------------
+  function loadPrimaryCausesTable() {
+    $('#causesTbody').html('<tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>');
+
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || !res.success) {
+        $('#causesTbody').html('<tr><td colspan="3" class="text-center text-danger">Unable to load primary causes.</td></tr>');
+        return;
+      }
+
+      var rows = res.rows || [];
+      if (rows.length === 0) {
+        $('#causesTbody').html('<tr><td colspan="3" class="text-center text-muted">No primary causes found.</td></tr>');
+        return;
+      }
+
+      var html = '';
+      rows.forEach(function(c) {
+        var safe = JSON.stringify(c).replace(/"/g, "&quot;");
+        html += `<tr>
+          <td><b>${escapeHtml(c.cause)}</b></td>
+          <td>${escapeHtml(c.updated || '')}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-primary mr-1" onclick="editCause(${safe})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deleteCauseRow(${c.rowIdx})"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>`;
+      });
+
+      $('#causesTbody').html(html);
+    }).listPrimaryCauses(currentEmail);
+  }
+
+  function openCauseForm() {
+    $('#causeFormTitle').text('Add Primary Cause');
+    $('#causeRowIdx').val('');
+    $('#causeText').val('');
+    $('#causeFormCard').show();
+  }
+
+  function closeCauseForm() {
+    $('#causeFormCard').hide();
+    $('#causeRowIdx').val('');
+    $('#causeText').val('');
+  }
+
+  function editCause(c) {
+    $('#causeFormTitle').text('Edit Primary Cause');
+    $('#causeRowIdx').val(c.rowIdx);
+    $('#causeText').val(c.cause || '');
+    $('#causeFormCard').show();
+  }
+
+  function saveCauseRow() {
+    var rowIdx = $('#causeRowIdx').val();
+    var cause = ($('#causeText').val() || '').trim();
+    if (!cause) { Swal.fire('Missing', 'Primary Cause is required.', 'warning'); return; }
+
+    Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    if (rowIdx) {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Saved', 'Primary Cause updated.', 'success');
+          closeCauseForm();
+          loadPrimaryCausesTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to update primary cause.', 'error');
+        }
+      }).updatePrimaryCause(currentEmail, rowIdx, cause);
+    } else {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Saved', 'Primary Cause added.', 'success');
+          closeCauseForm();
+          loadPrimaryCausesTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to add primary cause.', 'error');
+        }
+      }).addPrimaryCause(currentEmail, cause);
+    }
+  }
+
+  function deleteCauseRow(rowIdx) {
+    Swal.fire({
+      title: 'Delete primary cause?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete'
+    }).then(function(r) {
+      if (!r.isConfirmed) return;
+
+      Swal.fire({ title: 'Deleting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Deleted', 'Primary Cause removed.', 'success');
+          loadPrimaryCausesTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to delete primary cause.', 'error');
+        }
+      }).deletePrimaryCause(currentEmail, rowIdx);
+    });
+  }
+
+  // ------------- TREATMENTS -------------
+  function loadTreatmentsTable() {
+    $('#treatmentsTbody').html('<tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>');
+
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || !res.success) {
+        $('#treatmentsTbody').html('<tr><td colspan="3" class="text-center text-danger">Unable to load treatments.</td></tr>');
+        return;
+      }
+
+      var rows = res.rows || [];
+      if (rows.length === 0) {
+        $('#treatmentsTbody').html('<tr><td colspan="3" class="text-center text-muted">No treatments found.</td></tr>');
+        return;
+      }
+
+      var html = '';
+      rows.forEach(function(t) {
+        var safe = JSON.stringify(t).replace(/"/g, "&quot;");
+        html += `<tr>
+          <td><b>${escapeHtml(t.treatment)}</b></td>
+          <td>${escapeHtml(t.updated || '')}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-primary mr-1" onclick="editTreatment(${safe})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deleteTreatmentRow(${t.rowIdx})"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>`;
+      });
+
+      $('#treatmentsTbody').html(html);
+    }).listTreatments(currentEmail);
+  }
+
+  function openTreatmentForm() {
+    $('#treatmentFormTitle').text('Add Treatment');
+    $('#treatmentRowIdx').val('');
+    $('#treatmentText').val('');
+    $('#treatmentFormCard').show();
+  }
+
+  function closeTreatmentForm() {
+    $('#treatmentFormCard').hide();
+    $('#treatmentRowIdx').val('');
+    $('#treatmentText').val('');
+  }
+
+  function editTreatment(t) {
+    $('#treatmentFormTitle').text('Edit Treatment');
+    $('#treatmentRowIdx').val(t.rowIdx);
+    $('#treatmentText').val(t.treatment || '');
+    $('#treatmentFormCard').show();
+  }
+
+  function saveTreatmentRow() {
+    var rowIdx = $('#treatmentRowIdx').val();
+    var treatment = ($('#treatmentText').val() || '').trim();
+    if (!treatment) { Swal.fire('Missing', 'Treatment is required.', 'warning'); return; }
+
+    Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    if (rowIdx) {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Saved', 'Treatment updated.', 'success');
+          closeTreatmentForm();
+          loadTreatmentsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to update treatment.', 'error');
+        }
+      }).updateTreatment(currentEmail, rowIdx, treatment);
+    } else {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Saved', 'Treatment added.', 'success');
+          closeTreatmentForm();
+          loadTreatmentsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to add treatment.', 'error');
+        }
+      }).addTreatment(currentEmail, treatment);
+    }
+  }
+
+  function deleteTreatmentRow(rowIdx) {
+    Swal.fire({
+      title: 'Delete treatment?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete'
+    }).then(function(r) {
+      if (!r.isConfirmed) return;
+
+      Swal.fire({ title: 'Deleting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Deleted', 'Treatment removed.', 'success');
+          loadTreatmentsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to delete treatment.', 'error');
+        }
+      }).deleteTreatment(currentEmail, rowIdx);
+    });
+  }
+
+  // ------------- PROVIDERS -------------
+  function buildHoursSummary(p) {
+    var parts = [];
+    if (p.monOpen) parts.push('Mon: ' + (p.monHours || ''));
+    if (p.tueOpen) parts.push('Tue: ' + (p.tueHours || ''));
+    if (p.wedOpen) parts.push('Wed: ' + (p.wedHours || ''));
+    if (p.thuOpen) parts.push('Thu: ' + (p.thuHours || ''));
+    if (p.friOpen) parts.push('Fri: ' + (p.friHours || ''));
+    if (p.satOpen) parts.push('Sat: ' + (p.satHours || ''));
+    if (p.sunOpen) parts.push('Sun: ' + (p.sunHours || ''));
+    return parts.length ? parts.join('<br>') : '<span class="text-muted">No hours set</span>';
+  }
+
+  function loadProvidersTable() {
+    $('#providersTbody').html('<tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>');
+
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || !res.success) {
+        $('#providersTbody').html('<tr><td colspan="6" class="text-center text-danger">Unable to load providers.</td></tr>');
+        return;
+      }
+
+      var rows = res.rows || [];
+      if (rows.length === 0) {
+        $('#providersTbody').html('<tr><td colspan="6" class="text-center text-muted">No providers found.</td></tr>');
+        return;
+      }
+
+      var html = '';
+      rows.forEach(function(p) {
+        var safe = JSON.stringify(p).replace(/"/g, "&quot;");
+        html += `<tr>
+          <td><b>${escapeHtml(p.providerName)}</b></td>
+          <td>${escapeHtml(p.phone || '')}</td>
+          <td class="small">${escapeHtml(p.address || '')}</td>
+          <td class="small">${buildHoursSummary(p)}</td>
+          <td>${escapeHtml(p.updated || '')}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-primary mr-1" onclick="editProvider(${safe})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deleteProviderRow(${p.rowIdx})"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>`;
+      });
+
+      $('#providersTbody').html(html);
+    }).listTreatmentProviders(currentEmail);
+  }
+
+  function openProviderForm() {
+    $('#providerFormTitle').text('Add Provider');
+    $('#provRowIdx').val('');
+    $('#provName,#provAddress,#provPhone').val('');
+    $('#provMonOpen,#provTueOpen,#provWedOpen,#provThuOpen,#provFriOpen,#provSatOpen,#provSunOpen').prop('checked', false);
+    $('#provMonHours,#provTueHours,#provWedHours,#provThuHours,#provFriHours,#provSatHours,#provSunHours').val('');
+    $('#providerFormCard').show();
+  }
+
+  function closeProviderForm() {
+    $('#providerFormCard').hide();
+    $('#provRowIdx').val('');
+  }
+
+  function editProvider(p) {
+    $('#providerFormTitle').text('Edit Provider');
+    $('#provRowIdx').val(p.rowIdx);
+    $('#provName').val(p.providerName || '');
+    $('#provAddress').val(p.address || '');
+    $('#provPhone').val(p.phone || '');
+
+    $('#provMonOpen').prop('checked', !!p.monOpen);
+    $('#provMonHours').val(p.monHours || '');
+    $('#provTueOpen').prop('checked', !!p.tueOpen);
+    $('#provTueHours').val(p.tueHours || '');
+    $('#provWedOpen').prop('checked', !!p.wedOpen);
+    $('#provWedHours').val(p.wedHours || '');
+    $('#provThuOpen').prop('checked', !!p.thuOpen);
+    $('#provThuHours').val(p.thuHours || '');
+    $('#provFriOpen').prop('checked', !!p.friOpen);
+    $('#provFriHours').val(p.friHours || '');
+    $('#provSatOpen').prop('checked', !!p.satOpen);
+    $('#provSatHours').val(p.satHours || '');
+    $('#provSunOpen').prop('checked', !!p.sunOpen);
+    $('#provSunHours').val(p.sunHours || '');
+
+    $('#providerFormCard').show();
+  }
+
+  function providerPayload() {
+    return {
+      providerName: ($('#provName').val() || '').trim(),
+      address: ($('#provAddress').val() || '').trim(),
+      phone: ($('#provPhone').val() || '').trim(),
+      monOpen: $('#provMonOpen').is(':checked'),
+      monHours: ($('#provMonHours').val() || '').trim(),
+      tueOpen: $('#provTueOpen').is(':checked'),
+      tueHours: ($('#provTueHours').val() || '').trim(),
+      wedOpen: $('#provWedOpen').is(':checked'),
+      wedHours: ($('#provWedHours').val() || '').trim(),
+      thuOpen: $('#provThuOpen').is(':checked'),
+      thuHours: ($('#provThuHours').val() || '').trim(),
+      friOpen: $('#provFriOpen').is(':checked'),
+      friHours: ($('#provFriHours').val() || '').trim(),
+      satOpen: $('#provSatOpen').is(':checked'),
+      satHours: ($('#provSatHours').val() || '').trim(),
+      sunOpen: $('#provSunOpen').is(':checked'),
+      sunHours: ($('#provSunHours').val() || '').trim()
+    };
+  }
+
+  function saveProviderRow() {
+    var rowIdx = $('#provRowIdx').val();
+    var payload = providerPayload();
+
+    if (!payload.providerName) {
+      Swal.fire('Missing', 'Provider Name is required.', 'warning');
+      return;
+    }
+
+    Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    if (rowIdx) {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Saved', 'Provider updated.', 'success');
+          closeProviderForm();
+          loadProvidersTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to update provider.', 'error');
+        }
+      }).updateTreatmentProvider(currentEmail, rowIdx, payload);
+    } else {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Saved', 'Provider added.', 'success');
+          closeProviderForm();
+          loadProvidersTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to add provider.', 'error');
+        }
+      }).addTreatmentProvider(currentEmail, payload);
+    }
+  }
+
+  function deleteProviderRow(rowIdx) {
+    Swal.fire({
+      title: 'Delete provider?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete'
+    }).then(function(r) {
+      if (!r.isConfirmed) return;
+
+      Swal.fire({ title: 'Deleting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Deleted', 'Provider removed.', 'success');
+          loadProvidersTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to delete provider.', 'error');
+        }
+      }).deleteTreatmentProvider(currentEmail, rowIdx);
+    });
+  }
+
+  // ------------- BODY PARTS -------------
+  function loadBodyPartsTable() {
+    $('#bodyPartsTbody').html('<tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>');
+
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || !res.success) {
+        $('#bodyPartsTbody').html('<tr><td colspan="3" class="text-center text-danger">Unable to load body parts.</td></tr>');
+        return;
+      }
+
+      var rows = res.rows || [];
+      if (rows.length === 0) {
+        $('#bodyPartsTbody').html('<tr><td colspan="3" class="text-center text-muted">No body parts found.</td></tr>');
+        return;
+      }
+
+      var html = '';
+      rows.forEach(function(b) {
+        var safe = JSON.stringify(b).replace(/"/g, "&quot;");
+        html += `<tr>
+          <td><b>${escapeHtml(b.bodyPart)}</b></td>
+          <td>${escapeHtml(b.updated || '')}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-primary mr-1" onclick="editBodyPart(${safe})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deleteBodyPartRow(${b.rowIdx})"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>`;
+      });
+
+      $('#bodyPartsTbody').html(html);
+    }).listBodyParts(currentEmail);
+  }
+
+  function openBodyPartForm() {
+    $('#bodyPartFormTitle').text('Add Body Part');
+    $('#bodyPartRowIdx').val('');
+    $('#bodyPartText').val('');
+    $('#bodyPartFormCard').show();
+  }
+
+  function closeBodyPartForm() {
+    $('#bodyPartFormCard').hide();
+    $('#bodyPartRowIdx').val('');
+    $('#bodyPartText').val('');
+  }
+
+  function editBodyPart(b) {
+    $('#bodyPartFormTitle').text('Edit Body Part');
+    $('#bodyPartRowIdx').val(b.rowIdx);
+    $('#bodyPartText').val(b.bodyPart || '');
+    $('#bodyPartFormCard').show();
+  }
+
+  function saveBodyPartRow() {
+    var rowIdx = $('#bodyPartRowIdx').val();
+    var bodyPart = ($('#bodyPartText').val() || '').trim();
+    if (!bodyPart) { Swal.fire('Missing', 'Body Part is required.', 'warning'); return; }
+
+    Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    if (rowIdx) {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Saved', 'Body Part updated.', 'success');
+          closeBodyPartForm();
+          loadBodyPartsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to update body part.', 'error');
+        }
+      }).updateBodyPart(currentEmail, rowIdx, bodyPart);
+    } else {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Saved', 'Body Part added.', 'success');
+          closeBodyPartForm();
+          loadBodyPartsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to add body part.', 'error');
+        }
+      }).addBodyPart(currentEmail, bodyPart);
+    }
+  }
+
+  function deleteBodyPartRow(rowIdx) {
+    Swal.fire({
+      title: 'Delete body part?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete'
+    }).then(function(r) {
+      if (!r.isConfirmed) return;
+
+      Swal.fire({ title: 'Deleting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          Swal.fire('Deleted', 'Body Part removed.', 'success');
+          loadBodyPartsTable();
+        } else {
+          Swal.fire('Error', (res && res.error) ? res.error : 'Unable to delete body part.', 'error');
+        }
+      }).deleteBodyPart(currentEmail, rowIdx);
+    });
+  }
+
+  // Shared escape
+  function escapeHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+</script>
