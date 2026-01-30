@@ -1,3 +1,7 @@
+<!-- ================================= -->
+<!-- Modal_FroiForm.html (FULL FILE) -->
+<!-- ================================= -->
+
 <div class="modal fade" id="froiModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
   <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
     <div class="modal-content">
@@ -14,7 +18,7 @@
         <div class="alert alert-success d-none" id="froiOk"></div>
 
         <form id="froiForm" onsubmit="handleFormSubmit(event)">
-          
+
           <h6 class="text-primary font-weight-bold mb-3 border-bottom pb-2">Reporter Information</h6>
           <div class="form-row">
             <div class="form-group col-md-6">
@@ -157,14 +161,14 @@
             <div class="form-group col-md-6">
               <label class="font-weight-bold">Primary Cause of Injury <span class="text-danger">*</span></label>
               <select class="form-control" id="primaryCause" required></select>
-              
+
               <label class="mt-3">Type of Injury</label>
               <select class="form-control" id="natureOfInjury">
                  <option value="" selected>Select Type of Injury...</option>
               </select>
             </div>
           </div>
-          
+
           <div class="form-group">
             <label class="font-weight-bold">Description of Incident <span class="text-danger">*</span></label>
             <textarea class="form-control" id="description" rows="4" required></textarea>
@@ -268,6 +272,13 @@
             </div>
           </div>
 
+          <!-- ADMIN / INCIDENT RECORD: ALL FIELDS (HEADER-DRIVEN) -->
+          <div id="incidentRecordAllFieldsWrap" class="d-none mt-4">
+            <h6 class="text-primary font-weight-bold mb-3 border-bottom pb-2">Incident Record (All Fields)</h6>
+            <div id="incidentRecordAllFields" class="bg-white border rounded p-3"></div>
+            <small class="text-muted d-block mt-2">Rendered from the FROI Form sheet header row.</small>
+          </div>
+
           <div class="d-flex justify-content-end mt-4">
             <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Cancel</button>
             <button type="submit" class="btn btn-primary font-weight-bold px-4">
@@ -294,12 +305,16 @@
   function openFroiModal() {
     $('#froiErr').addClass('d-none').text('');
     $('#froiOk').addClass('d-none').text('');
-    
+
     // Only load if empty
     if (dropdownCache.departments.length === 0) {
       loadDropdowns();
     }
-    
+
+    // Default: hide the header-driven Incident Record section unless explicitly shown by admin code
+    $('#incidentRecordAllFieldsWrap').addClass('d-none');
+    $('#incidentRecordAllFields').empty();
+
     $('#froiModal').modal('show');
   }
 
@@ -324,7 +339,7 @@
     populateSelect('natureOfInjury', dropdownCache.injuryTypes);
     populateSelect('treatmentType', dropdownCache.treatments);
     populateSelect('injuredBodyParts', dropdownCache.bodyParts);
-    
+
     // Providers Logic
     var pSel = $('#treatmentProvider');
     pSel.empty().append('<option value="">Select Treatment Provider...</option>');
@@ -356,7 +371,7 @@
     }
 
     var locs = dropdownCache.workLocations.filter(function(w) { return w.department === dept; });
-    
+
     if (locs.length > 0) {
       wlSel.prop('disabled', false);
       locs.forEach(function(w) {
@@ -391,7 +406,7 @@
   function handleFormSubmit(e) {
     e.preventDefault();
     $('#froiErr').addClass('d-none');
-    
+
     // Quick custom validation
     var dept = $('#departmentName').val();
     var loc = $('#workLocation').val();
@@ -414,34 +429,34 @@
       weeklySchedule: val('weeklySchedule'),
       secondEmployer: val('secondEmployer'),
       secondEmployerName: val('secondEmployerName'),
-      
+
       employeeName: val('employeeName'),
       employeeNumber: val('employeeNumber'),
       employeePhone: val('employeePhone'),
       normalDuties: val('normalDuties'),
       dutiesExplained: val('dutiesExplained'),
-      
+
       dateEmployerNotified: val('dateEmployerNotified'),
       supervisorNotified: val('supervisorNotified'),
       witnesses: val('witnesses'),
-      
+
       injuredBodyParts: ($('#injuredBodyParts').val() || []).join(', '),
       primaryCause: val('primaryCause'),
       natureOfInjury: val('natureOfInjury'),
       description: val('description'),
       equipmentUsed: val('equipmentUsed'),
-      
+
       treatmentProvider: val('treatmentProvider'),
       treatmentType: val('treatmentType'),
       medicalProvider: val('medicalProvider'),
       otherProvider: val('otherProvider'),
-      
+
       returnToShift: val('returnToShift'),
       ehPay: val('ehPay'),
       reasonFd: val('reasonFd'),
       approvalsFd: val('approvalsFd'),
       textNotes: val('textNotes'),
-      
+
       primaryContactName: val('primaryContactName'),
       primaryContactEmail: val('primaryContactEmail'),
       primaryContactPhone: val('primaryContactPhone'),
@@ -473,5 +488,25 @@
   function escapeHtml(text) {
     if (!text) return '';
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+
+  // Admin use: render ALL FROI columns by sheet headers (read-only)
+  function renderIncidentRecordAllFields(headers, row) {
+    headers = headers || [];
+    row = row || [];
+
+    var html = '';
+    for (var i = 0; i < headers.length; i++) {
+      var h = String(headers[i] === null || headers[i] === undefined ? '' : headers[i]).trim();
+      if (!h) continue;
+      var v = (i < row.length) ? String(row[i] === null || row[i] === undefined ? '' : row[i]) : '';
+      html += '<div class="form-row mb-2">' +
+                '<div class="col-md-4 small font-weight-bold text-muted">' + escapeHtml(h) + '</div>' +
+                '<div class="col-md-8">' + escapeHtml(v) + '</div>' +
+              '</div>';
+    }
+
+    $('#incidentRecordAllFields').html(html || '<div class="text-muted">No fields available.</div>');
+    $('#incidentRecordAllFieldsWrap').removeClass('d-none');
   }
 </script>
