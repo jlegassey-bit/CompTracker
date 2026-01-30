@@ -1,10 +1,14 @@
+<!-- ===================================== -->
+<!-- View_AdminDashboard.html (FULL FILE) -->
+<!-- ===================================== -->
+
 <div class="card shadow-sm border-0">
   <div class="card-header bg-white py-3">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h5 class="mb-0 font-weight-bold">Case Management</h5>
       <button class="btn btn-outline-primary btn-sm" onclick="refreshCases()"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
     </div>
-    
+
     <div class="form-row">
       <div class="col-md-3">
         <label class="small font-weight-bold text-muted">Department</label>
@@ -38,10 +42,10 @@
   <div class="card-body p-0">
     <div class="table-responsive">
       <table class="table table-hover mb-0" id="casesTable">
-        <thead class="thead-light">
+        <thead class="thead-light" id="casesThead">
           <tr>
-            <th>Date</th>
-            <th>Employee</th>
+            <th>Incident Date</th>
+            <th>Employee Name</th>
             <th>Department</th>
             <th>Work Location</th>
             <th>Status</th>
@@ -57,81 +61,156 @@
 </div>
 
 <script>
+  function normalizeHeader_(h) {
+    if (h === null || h === undefined) return '';
+    return String(h).replace(/\s+/g, ' ').trim().toLowerCase();
+  }
+
+  function headerIndexMap_(headers) {
+    var m = {};
+    (headers || []).forEach(function(h, i) {
+      var raw = (h === null || h === undefined) ? '' : String(h).trim();
+      var norm = normalizeHeader_(h);
+      if (raw && !m.hasOwnProperty(raw)) m[raw] = i;
+      if (norm && !m.hasOwnProperty(norm)) m[norm] = i;
+    });
+    return m;
+  }
+
+  function resolveIdx_(idxMap, preferredHeader, alternates) {
+    if (!idxMap) return -1;
+
+    if (preferredHeader && idxMap.hasOwnProperty(preferredHeader)) return idxMap[preferredHeader];
+
+    var n = normalizeHeader_(preferredHeader);
+    if (n && idxMap.hasOwnProperty(n)) return idxMap[n];
+
+    alternates = alternates || [];
+    for (var i = 0; i < alternates.length; i++) {
+      var a = alternates[i];
+      if (a && idxMap.hasOwnProperty(a)) return idxMap[a];
+      var an = normalizeHeader_(a);
+      if (an && idxMap.hasOwnProperty(an)) return idxMap[an];
+    }
+
+    return -1;
+  }
+
+  function ensureTableHeadings_(headers) {
+    var idxMap = headerIndexMap_(headers || []);
+
+    function pickLabel_(preferred, alternates) {
+      if (resolveIdx_(idxMap, preferred, []) !== -1) return preferred;
+      alternates = alternates || [];
+      for (var i = 0; i < alternates.length; i++) {
+        if (resolveIdx_(idxMap, alternates[i], []) !== -1) return alternates[i];
+      }
+      return preferred;
+    }
+
+    var colLabels = [
+      pickLabel_('Incident Date', ['IncidentDate', 'Date', 'Incident Date/Time']),
+      pickLabel_('Employee Name', ['Employee', 'EmployeeName', 'Employee Full Name', 'Employee']),
+      pickLabel_('Department', ['Department Name', 'Dept']),
+      pickLabel_('Work Location', ['WorkLocation', 'Location', 'Work Site', 'Worksite']),
+      pickLabel_('Status', ['Case Status'])
+    ];
+
+    var theadHtml = '<tr>' +
+      colLabels.map(function(c){ return '<th>' + esc(c) + '</th>'; }).join('') +
+      '<th style="width:50px"></th>' +
+    '</tr>';
+
+    $('#casesThead').html(theadHtml);
+  }
+
   function renderCaseGrid() {
     var rows = APP.reports || [];
-    
-    // 1. Collect Filter Inputs
+    var headers = APP.headers || [];
+    var idxMap = headerIndexMap_(headers);
+
+    var IDX_DATE = resolveIdx_(idxMap, 'Incident Date', ['IncidentDate', 'Date', 'Incident Date/Time']);
+    var IDX_EMP  = resolveIdx_(idxMap, 'Employee Name', ['Employee', 'EmployeeName', 'Employee Full Name', 'Employee']);
+    var IDX_DEPT = resolveIdx_(idxMap, 'Department', ['Department Name', 'Dept']);
+    var IDX_LOC  = resolveIdx_(idxMap, 'Work Location', ['WorkLocation', 'Location', 'Work Site', 'Worksite']);
+    var IDX_STAT = resolveIdx_(idxMap, 'Status', ['Case Status']);
+
+    ensureTableHeadings_(headers);
+
     var fDept = $('#filterDept').val();
     var fDiv = $('#filterDiv').val();
     var fDate = $('#filterDate').val();
     var fStatus = $('#filterStatus').val();
 
-    // 2. Populate Dropdowns if empty (first run)
-    if ($('#filterDept option').length <= 1) {
-      var depts = [...new Set(rows.map(r => r[18]).filter(Boolean))].sort();
-      depts.forEach(d => $('#filterDept').append(`<option value="${d}">${d}</option>`));
-      
-      var locs = [...new Set(rows.map(r => r[5]).filter(Boolean))].sort();
-      locs.forEach(l => $('#filterDiv').append(`<option value="${l}">${l}</option>`));
+    function cell_(r, idx) {
+      if (idx < 0) return '';
+      return (r && idx < r.length) ? r[idx] : '';
     }
 
-    // 3. Filter Data
-    var filtered = rows.filter(function(r) {
-      // Dept
-      if (fDept !== 'All' && r[18] !== fDept) return false;
-      // Location
-      if (fDiv !== 'All' && r[5] !== fDiv) return false;
-      // Date (Simple match YYYY-MM-DD against ISO or formatted)
-      if (fDate) {
-         // r[3] is Incident Date
-         var incDate = new Date(r[3]).toISOString().split('T')[0];
-         if(incDate !== fDate) return false;
+    if ($('#filterDept option').length <= 1) {
+      if (IDX_DEPT >= 0) {
+        var depts = [...new Set(rows.map(r => cell_(r, IDX_DEPT)).filter(Boolean))].sort();
+        depts.forEach(d => $('#filterDept').append(`<option value="${d}">${d}</option>`));
       }
-      // Status Logic
-      var st = r[41] || 'Pending Review';
+
+      if (IDX_LOC >= 0) {
+        var locs = [...new Set(rows.map(r => cell_(r, IDX_LOC)).filter(Boolean))].sort();
+        locs.forEach(l => $('#filterDiv').append(`<option value="${l}">${l}</option>`));
+      }
+    }
+
+    var filtered = rows.filter(function(r) {
+      if (fDept !== 'All' && IDX_DEPT >= 0 && cell_(r, IDX_DEPT) !== fDept) return false;
+      if (fDiv !== 'All' && IDX_LOC >= 0 && cell_(r, IDX_LOC) !== fDiv) return false;
+
+      if (fDate && IDX_DATE >= 0) {
+        var raw = cell_(r, IDX_DATE);
+        var incDate = '';
+        try {
+          incDate = new Date(raw).toISOString().split('T')[0];
+        } catch(e) {
+          incDate = '';
+        }
+        if (incDate !== fDate) return false;
+      }
+
+      var st = (IDX_STAT >= 0 ? cell_(r, IDX_STAT) : '') || 'Pending Review';
       if (fStatus === 'Active') {
         if (st === 'Case Closed') return false;
       } else if (fStatus !== 'All') {
         if (st !== fStatus) return false;
       }
-      
+
       return true;
     });
 
-    // 4. Sort & Group
-    // Priority: Pending Review (1), Reviewed - Open (2), Case Closed (3), Others (99)
-    // Secondary Sort: Date Descending
     var statusOrder = { "Pending Review": 1, "Reviewed - Open": 2, "Case Closed": 3 };
-    
+
     filtered.sort(function(a, b) {
-      var sA = statusOrder[a[41] || 'Pending Review'] || 99;
-      var sB = statusOrder[b[41] || 'Pending Review'] || 99;
-      
-      if (sA !== sB) return sA - sB; // Status Priority
-      
-      // Date Desc
-      var dA = new Date(a[3]).getTime();
-      var dB = new Date(b[3]).getTime();
-      return dB - dA; 
+      var sA = statusOrder[(IDX_STAT >= 0 ? cell_(a, IDX_STAT) : '') || 'Pending Review'] || 99;
+      var sB = statusOrder[(IDX_STAT >= 0 ? cell_(b, IDX_STAT) : '') || 'Pending Review'] || 99;
+
+      if (sA !== sB) return sA - sB;
+
+      var dA = (IDX_DATE >= 0) ? new Date(cell_(a, IDX_DATE)).getTime() : 0;
+      var dB = (IDX_DATE >= 0) ? new Date(cell_(b, IDX_DATE)).getTime() : 0;
+      return dB - dA;
     });
 
-    // 5. Build HTML
     var html = '';
     if(filtered.length === 0) {
       html = '<tr><td colspan="6" class="text-center text-muted py-5">No cases found matching criteria.</td></tr>';
     } else {
       filtered.forEach(function(r) {
-        var rid = r[r.length-1];
-        var st = r[41] || 'Pending Review';
-        
-        // Row Coloring Logic
+        var rid = r[r.length - 1];
+        var st = (IDX_STAT >= 0 ? cell_(r, IDX_STAT) : '') || 'Pending Review';
+
         var rowClass = '';
         var badgeClass = 'badge-secondary';
-        
+
         if (st === 'Pending Review') {
-          // "School Bus Yellow" background for row
-          rowClass = 'style="background-color: #ffeeba;"'; // Bootstrap table-warning style
-          badgeClass = 'badge-warning'; // Yellow badge
+          rowClass = 'style="background-color: #ffeeba;"';
+          badgeClass = 'badge-warning';
         } else if (st === 'Reviewed - Open') {
           badgeClass = 'badge-primary';
         } else if (st === 'Case Closed') {
@@ -139,34 +218,87 @@
         }
 
         html += `<tr ${rowClass} style="cursor:pointer" onclick="openCaseDetail(${rid})">
-          <td>${formatDate(r[3])}</td>
-          <td class="font-weight-bold text-dark">${esc(r[8])}</td>
-          <td>${esc(r[18])}</td>
-          <td>${esc(r[5])}</td>
+          <td>${formatDate(IDX_DATE >= 0 ? cell_(r, IDX_DATE) : '')}</td>
+          <td class="font-weight-bold text-dark">${esc(IDX_EMP >= 0 ? cell_(r, IDX_EMP) : '')}</td>
+          <td>${esc(IDX_DEPT >= 0 ? cell_(r, IDX_DEPT) : '')}</td>
+          <td>${esc(IDX_LOC >= 0 ? cell_(r, IDX_LOC) : '')}</td>
           <td><span class="badge ${badgeClass} p-2">${st}</span></td>
           <td><button class="btn btn-sm btn-light"><i class="fas fa-chevron-right"></i></button></td>
         </tr>`;
       });
     }
-    
+
     $('#casesTable tbody').html(html);
   }
 
   function refreshCases() {
-    Swal.fire({title:'Refreshing...', didOpen:()=>Swal.showLoading()});
+    // NOTE: This should only be called after access verification has set APP.token
+    Swal.fire({title:'Loading cases...', allowOutsideClick:false, didOpen:()=>Swal.showLoading()});
     google.script.run.withSuccessHandler(function(res){
       Swal.close();
-      if(res.success) {
-        APP.reports = res.reports;
+      if(res && res.success) {
+        APP.reports = res.reports || [];
+        APP.headers = res.headers || [];
         renderCaseGrid();
+      } else {
+        Swal.fire('Error', (res && res.error) ? res.error : 'Failed to load cases.', 'error');
       }
     }).adminGetCases(APP.token);
   }
 
-  // Initial Render (called by Reports.html initApp)
-  // We attach a listener to inputs just in case
   $('#filterDept, #filterDiv, #filterDate, #filterStatus').on('change', renderCaseGrid);
 
-  function formatDate(d) { if(!d) return ''; var dt=new Date(d); return isNaN(dt)?d:dt.toLocaleDateString(); }
-  function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;') : ''; }
+  function formatDate(d) {
+    if(!d) return '';
+    var dt = new Date(d);
+    return isNaN(dt) ? d : dt.toLocaleDateString();
+  }
+
+  function esc(s) {
+    return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;') : '';
+  }
+
+  // *** SURGICAL CHANGE: Replace auto-refresh with a post-verification welcome + "Load Cases" button ***
+  var __welcomeShownOnce = false;
+
+  function showWelcomeAndLoadButton_() {
+    if (__welcomeShownOnce) return;
+    __welcomeShownOnce = true;
+
+    Swal.fire({
+      title: "Welcome to the City of Portland's Injury Tracker",
+      icon: "info",
+      html:
+        '<div style="text-align:left; font-size: 14px; line-height: 1.4;">' +
+          '<p class="mb-2"><strong>Confidential Information Warning</strong></p>' +
+          '<p class="mb-0">' +
+            'This system contains confidential employee injury and medical-related information. ' +
+            'Access, use, and disclosure must comply with City policies and applicable law. ' +
+            'Do not share screenshots or case details with unauthorized individuals.' +
+          '</p>' +
+        '</div>',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      confirmButtonText: "Load Cases"
+    }).then(function(result){
+      if (result && result.isConfirmed) {
+        refreshCases();
+      }
+    });
+  }
+
+  function waitForVerifiedTokenThenShowWelcome_() {
+    try {
+      if (window.APP && APP.token && String(APP.token).trim() !== '') {
+        showWelcomeAndLoadButton_();
+        return;
+      }
+    } catch(e) {}
+
+    setTimeout(waitForVerifiedTokenThenShowWelcome_, 200);
+  }
+
+  $(function() {
+    waitForVerifiedTokenThenShowWelcome_();
+  });
 </script>
