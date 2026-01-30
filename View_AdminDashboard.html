@@ -1,304 +1,366 @@
-<!-- ===================================== -->
-<!-- View_AdminDashboard.html (FULL FILE) -->
-<!-- ===================================== -->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard & Analytics - FROI Tracker</title>
+  
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  
+  <style>
+    body {
+      background: #f5f5f5;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .page-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: transform 0.2s;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .stat-card.green {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    
+    .stat-card.blue {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .stat-card.orange {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    .stat-value {
+      font-size: 3rem;
+      font-weight: bold;
+      margin: 15px 0;
+    }
+    
+    .stat-label {
+      font-size: 1.1rem;
+      opacity: 0.95;
+      font-weight: 500;
+    }
+    
+    .stat-sublabel {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    
+    .chart-card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .chart-card .card-header {
+      border: none;
+      padding: 0 0 20px 0;
+      background: transparent;
+    }
+    
+    .chart-card h5 {
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 350px;
+    }
+    
+    .btn-back {
+      background: white;
+      color: #667eea;
+      border: 2px solid white;
+    }
+    
+    .btn-back:hover {
+      background: transparent;
+      color: white;
+      border: 2px solid white;
+    }
+  </style>
+</head>
+<body>
 
-<div class="card shadow-sm border-0">
-  <div class="card-header bg-white py-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0 font-weight-bold">Case Management</h5>
-      <button class="btn btn-outline-primary btn-sm" onclick="refreshCases()"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
-    </div>
-
-    <div class="form-row">
-      <div class="col-md-3">
-        <label class="small font-weight-bold text-muted">Department</label>
-        <select id="filterDept" class="form-control form-control-sm" onchange="renderCaseGrid()">
-          <option value="All">All Departments</option>
-        </select>
+<div class="page-header">
+  <div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="mb-0"><i class="fas fa-chart-line mr-3"></i>Dashboard & Analytics</h2>
+        <p class="mb-0 mt-2">FROI Injury Tracking System</p>
       </div>
-      <div class="col-md-3">
-        <label class="small font-weight-bold text-muted">Work Location</label>
-        <select id="filterDiv" class="form-control form-control-sm" onchange="renderCaseGrid()">
-          <option value="All">All Locations</option>
-        </select>
+      <div>
+        <button class="btn btn-back mr-2" onclick="loadDashboard()">
+          <i class="fas fa-sync mr-2"></i>Refresh
+        </button>
+        <button class="btn btn-back" onclick="window.location.href='<?= getWebAppUrl() ?>'">
+          <i class="fas fa-arrow-left mr-2"></i>Back to Cases
+        </button>
       </div>
-      <div class="col-md-3">
-        <label class="small font-weight-bold text-muted">Date Range</label>
-        <input type="date" id="filterDate" class="form-control form-control-sm" onchange="renderCaseGrid()">
-      </div>
-      <div class="col-md-3">
-        <label class="small font-weight-bold text-muted">Status View</label>
-        <select id="filterStatus" class="form-control form-control-sm" onchange="renderCaseGrid()">
-          <option value="Active" selected>Active Cases (Default)</option>
-          <option value="Pending Review">Pending Review Only</option>
-          <option value="Reviewed - Open">Reviewed - Open Only</option>
-          <option value="Case Closed">Closed Cases Only</option>
-          <option value="All">Show All</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0" id="casesTable">
-        <thead class="thead-light" id="casesThead">
-          <tr>
-            <th>Incident Date</th>
-            <th>Employee Name</th>
-            <th>Department</th>
-            <th>Work Location</th>
-            <th>Status</th>
-            <th style="width:50px"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td colspan="6" class="text-center text-muted py-4">Loading cases...</td></tr>
-        </tbody>
-      </table>
     </div>
   </div>
 </div>
 
+<div class="container-fluid">
+  
+  <!-- Stats Cards -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-label"><i class="fas fa-folder mr-2"></i>Total Cases</div>
+        <div class="stat-value" id="stat_total">0</div>
+        <div class="stat-sublabel">All time incidents</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card green">
+        <div class="stat-label"><i class="fas fa-folder-open mr-2"></i>Open Cases</div>
+        <div class="stat-value" id="stat_open">0</div>
+        <div class="stat-sublabel">Currently active</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card blue">
+        <div class="stat-label"><i class="fas fa-check-circle mr-2"></i>Closed Cases</div>
+        <div class="stat-value" id="stat_closed">0</div>
+        <div class="stat-sublabel">Successfully resolved</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card orange">
+        <div class="stat-label"><i class="fas fa-clock mr-2"></i>Avg Days to Close</div>
+        <div class="stat-value" id="stat_avg">0</div>
+        <div class="stat-sublabel">Resolution time</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Charts Row 1 -->
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="chart-card">
+        <div class="card-header">
+          <h5><i class="fas fa-chart-area mr-2 text-primary"></i>Injury Trends (Last 6 Months)</h5>
+        </div>
+        <div class="chart-container">
+          <canvas id="trendsChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="chart-card">
+        <div class="card-header">
+          <h5><i class="fas fa-building mr-2 text-success"></i>Top 5 Departments</h5>
+        </div>
+        <div class="chart-container">
+          <canvas id="deptChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Charts Row 2 -->
+  <div class="row">
+    <div class="col-12">
+      <div class="chart-card">
+        <div class="card-header">
+          <h5><i class="fas fa-heartbeat mr-2 text-danger"></i>Top 5 Injury Types</h5>
+        </div>
+        <div class="chart-container">
+          <canvas id="typeChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-  function normalizeHeader_(h) {
-    if (h === null || h === undefined) return '';
-    return String(h).replace(/\s+/g, ' ').trim().toLowerCase();
-  }
-
-  function headerIndexMap_(headers) {
-    var m = {};
-    (headers || []).forEach(function(h, i) {
-      var raw = (h === null || h === undefined) ? '' : String(h).trim();
-      var norm = normalizeHeader_(h);
-      if (raw && !m.hasOwnProperty(raw)) m[raw] = i;
-      if (norm && !m.hasOwnProperty(norm)) m[norm] = i;
-    });
-    return m;
-  }
-
-  function resolveIdx_(idxMap, preferredHeader, alternates) {
-    if (!idxMap) return -1;
-
-    if (preferredHeader && idxMap.hasOwnProperty(preferredHeader)) return idxMap[preferredHeader];
-
-    var n = normalizeHeader_(preferredHeader);
-    if (n && idxMap.hasOwnProperty(n)) return idxMap[n];
-
-    alternates = alternates || [];
-    for (var i = 0; i < alternates.length; i++) {
-      var a = alternates[i];
-      if (a && idxMap.hasOwnProperty(a)) return idxMap[a];
-      var an = normalizeHeader_(a);
-      if (an && idxMap.hasOwnProperty(an)) return idxMap[an];
-    }
-
-    return -1;
-  }
-
-  function ensureTableHeadings_(headers) {
-    var idxMap = headerIndexMap_(headers || []);
-
-    function pickLabel_(preferred, alternates) {
-      if (resolveIdx_(idxMap, preferred, []) !== -1) return preferred;
-      alternates = alternates || [];
-      for (var i = 0; i < alternates.length; i++) {
-        if (resolveIdx_(idxMap, alternates[i], []) !== -1) return alternates[i];
-      }
-      return preferred;
-    }
-
-    var colLabels = [
-      pickLabel_('Incident Date', ['IncidentDate', 'Date', 'Incident Date/Time']),
-      pickLabel_('Employee Name', ['Employee', 'EmployeeName', 'Employee Full Name', 'Employee']),
-      pickLabel_('Department', ['Department Name', 'Dept']),
-      pickLabel_('Work Location', ['WorkLocation', 'Location', 'Work Site', 'Worksite']),
-      pickLabel_('Status', ['Case Status'])
-    ];
-
-    var theadHtml = '<tr>' +
-      colLabels.map(function(c){ return '<th>' + esc(c) + '</th>'; }).join('') +
-      '<th style="width:50px"></th>' +
-    '</tr>';
-
-    $('#casesThead').html(theadHtml);
-  }
-
-  function renderCaseGrid() {
-    var rows = APP.reports || [];
-    var headers = APP.headers || [];
-    var idxMap = headerIndexMap_(headers);
-
-    var IDX_DATE = resolveIdx_(idxMap, 'Incident Date', ['IncidentDate', 'Date', 'Incident Date/Time']);
-    var IDX_EMP  = resolveIdx_(idxMap, 'Employee Name', ['Employee', 'EmployeeName', 'Employee Full Name', 'Employee']);
-    var IDX_DEPT = resolveIdx_(idxMap, 'Department', ['Department Name', 'Dept']);
-    var IDX_LOC  = resolveIdx_(idxMap, 'Work Location', ['WorkLocation', 'Location', 'Work Site', 'Worksite']);
-    var IDX_STAT = resolveIdx_(idxMap, 'Status', ['Case Status']);
-
-    ensureTableHeadings_(headers);
-
-    var fDept = $('#filterDept').val();
-    var fDiv = $('#filterDiv').val();
-    var fDate = $('#filterDate').val();
-    var fStatus = $('#filterStatus').val();
-
-    function cell_(r, idx) {
-      if (idx < 0) return '';
-      return (r && idx < r.length) ? r[idx] : '';
-    }
-
-    if ($('#filterDept option').length <= 1) {
-      if (IDX_DEPT >= 0) {
-        var depts = [...new Set(rows.map(r => cell_(r, IDX_DEPT)).filter(Boolean))].sort();
-        depts.forEach(d => $('#filterDept').append(`<option value="${d}">${d}</option>`));
-      }
-
-      if (IDX_LOC >= 0) {
-        var locs = [...new Set(rows.map(r => cell_(r, IDX_LOC)).filter(Boolean))].sort();
-        locs.forEach(l => $('#filterDiv').append(`<option value="${l}">${l}</option>`));
-      }
-    }
-
-    var filtered = rows.filter(function(r) {
-      if (fDept !== 'All' && IDX_DEPT >= 0 && cell_(r, IDX_DEPT) !== fDept) return false;
-      if (fDiv !== 'All' && IDX_LOC >= 0 && cell_(r, IDX_LOC) !== fDiv) return false;
-
-      if (fDate && IDX_DATE >= 0) {
-        var raw = cell_(r, IDX_DATE);
-        var incDate = '';
-        try {
-          incDate = new Date(raw).toISOString().split('T')[0];
-        } catch(e) {
-          incDate = '';
+  // Use parent window's APP object (defined in Reports.html)
+  var charts = {};
+  
+  function loadDashboard() {
+    Swal.fire({ title: 'Loading analytics...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    google.script.run
+      .withSuccessHandler(function(res) {
+        Swal.close();
+        if (!res.success) {
+          Swal.fire('Error', res.error || 'Failed to load dashboard', 'error');
+          return;
         }
-        if (incDate !== fDate) return false;
-      }
-
-      var st = (IDX_STAT >= 0 ? cell_(r, IDX_STAT) : '') || 'Pending Review';
-      if (fStatus === 'Active') {
-        if (st === 'Case Closed') return false;
-      } else if (fStatus !== 'All') {
-        if (st !== fStatus) return false;
-      }
-
-      return true;
-    });
-
-    var statusOrder = { "Pending Review": 1, "Reviewed - Open": 2, "Case Closed": 3 };
-
-    filtered.sort(function(a, b) {
-      var sA = statusOrder[(IDX_STAT >= 0 ? cell_(a, IDX_STAT) : '') || 'Pending Review'] || 99;
-      var sB = statusOrder[(IDX_STAT >= 0 ? cell_(b, IDX_STAT) : '') || 'Pending Review'] || 99;
-
-      if (sA !== sB) return sA - sB;
-
-      var dA = (IDX_DATE >= 0) ? new Date(cell_(a, IDX_DATE)).getTime() : 0;
-      var dB = (IDX_DATE >= 0) ? new Date(cell_(b, IDX_DATE)).getTime() : 0;
-      return dB - dA;
-    });
-
-    var html = '';
-    if(filtered.length === 0) {
-      html = '<tr><td colspan="6" class="text-center text-muted py-5">No cases found matching criteria.</td></tr>';
-    } else {
-      filtered.forEach(function(r) {
-        var rid = r[r.length - 1];
-        var st = (IDX_STAT >= 0 ? cell_(r, IDX_STAT) : '') || 'Pending Review';
-
-        var rowClass = '';
-        var badgeClass = 'badge-secondary';
-
-        if (st === 'Pending Review') {
-          rowClass = 'style="background-color: #ffeeba;"';
-          badgeClass = 'badge-warning';
-        } else if (st === 'Reviewed - Open') {
-          badgeClass = 'badge-primary';
-        } else if (st === 'Case Closed') {
-          badgeClass = 'badge-success';
-        }
-
-        html += `<tr ${rowClass} style="cursor:pointer" onclick="openCaseDetail(${rid})">
-          <td>${formatDate(IDX_DATE >= 0 ? cell_(r, IDX_DATE) : '')}</td>
-          <td class="font-weight-bold text-dark">${esc(IDX_EMP >= 0 ? cell_(r, IDX_EMP) : '')}</td>
-          <td>${esc(IDX_DEPT >= 0 ? cell_(r, IDX_DEPT) : '')}</td>
-          <td>${esc(IDX_LOC >= 0 ? cell_(r, IDX_LOC) : '')}</td>
-          <td><span class="badge ${badgeClass} p-2">${st}</span></td>
-          <td><button class="btn btn-sm btn-light"><i class="fas fa-chevron-right"></i></button></td>
-        </tr>`;
-      });
-    }
-
-    $('#casesTable tbody').html(html);
+        
+        // Update stat cards
+        $('#stat_total').text(res.totalCases);
+        $('#stat_open').text(res.openCases);
+        $('#stat_closed').text(res.closedCases);
+        $('#stat_avg').text(res.avgDaysToClose);
+        
+        // Destroy existing charts
+        if (charts.trends) charts.trends.destroy();
+        if (charts.dept) charts.dept.destroy();
+        if (charts.type) charts.type.destroy();
+        
+        // Trends Chart
+        var trendsCtx = document.getElementById('trendsChart').getContext('2d');
+        charts.trends = new Chart(trendsCtx, {
+          type: 'line',
+          data: {
+            labels: res.monthLabels,
+            datasets: [{
+              label: 'Number of Injuries',
+              data: res.monthCounts,
+              borderColor: 'rgb(75, 192, 192)',
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              tension: 0.4,
+              fill: true,
+              pointRadius: 5,
+              pointHoverRadius: 7
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                padding: 12,
+                titleFont: { size: 14 },
+                bodyFont: { size: 13 }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 },
+                grid: { color: 'rgba(0,0,0,0.05)' }
+              },
+              x: {
+                grid: { display: false }
+              }
+            }
+          }
+        });
+        
+        // Department Chart
+        var deptCtx = document.getElementById('deptChart').getContext('2d');
+        var deptLabels = res.top5Depts.map(function(d) { return d.department; });
+        var deptData = res.top5Depts.map(function(d) { return d.count; });
+        charts.dept = new Chart(deptCtx, {
+          type: 'doughnut',
+          data: {
+            labels: deptLabels,
+            datasets: [{
+              data: deptData,
+              backgroundColor: [
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 206, 86, 0.8)',
+                'rgba(75, 192, 192, 0.8)',
+                'rgba(153, 102, 255, 0.8)'
+              ],
+              borderWidth: 2,
+              borderColor: '#fff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { 
+                position: 'bottom',
+                labels: {
+                  padding: 15,
+                  font: { size: 12 }
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                padding: 12
+              }
+            }
+          }
+        });
+        
+        // Injury Type Chart
+        var typeCtx = document.getElementById('typeChart').getContext('2d');
+        var typeLabels = res.top5Types.map(function(t) { return t.type; });
+        var typeData = res.top5Types.map(function(t) { return t.count; });
+        charts.type = new Chart(typeCtx, {
+          type: 'bar',
+          data: {
+            labels: typeLabels,
+            datasets: [{
+              label: 'Number of Cases',
+              data: typeData,
+              backgroundColor: 'rgba(255, 99, 132, 0.6)',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                padding: 12
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 },
+                grid: { color: 'rgba(0,0,0,0.05)' }
+              },
+              x: {
+                grid: { display: false }
+              }
+            }
+          }
+        });
+        
+      })
+      .withFailureHandler(function(err) {
+        Swal.close();
+        Swal.fire('Error', err.toString(), 'error');
+      })
+      .getDashboardStats(APP.token);
   }
-
-  function refreshCases() {
-    // NOTE: This should only be called after access verification has set APP.token
-    Swal.fire({title:'Loading cases...', allowOutsideClick:false, didOpen:()=>Swal.showLoading()});
-    google.script.run.withSuccessHandler(function(res){
-      Swal.close();
-      if(res && res.success) {
-        APP.reports = res.reports || [];
-        APP.headers = res.headers || [];
-        renderCaseGrid();
-      } else {
-        Swal.fire('Error', (res && res.error) ? res.error : 'Failed to load cases.', 'error');
-      }
-    }).adminGetCases(APP.token);
-  }
-
-  $('#filterDept, #filterDiv, #filterDate, #filterStatus').on('change', renderCaseGrid);
-
-  function formatDate(d) {
-    if(!d) return '';
-    var dt = new Date(d);
-    return isNaN(dt) ? d : dt.toLocaleDateString();
-  }
-
-  function esc(s) {
-    return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;') : '';
-  }
-
-  // *** SURGICAL CHANGE: Replace auto-refresh with a post-verification welcome + "Load Cases" button ***
-  var __welcomeShownOnce = false;
-
-  function showWelcomeAndLoadButton_() {
-    if (__welcomeShownOnce) return;
-    __welcomeShownOnce = true;
-
-    Swal.fire({
-      title: "Welcome to the City of Portland's Injury Tracker",
-      icon: "info",
-      html:
-        '<div style="text-align:left; font-size: 14px; line-height: 1.4;">' +
-          '<p class="mb-2"><strong>Confidential Information Warning</strong></p>' +
-          '<p class="mb-0">' +
-            'This system contains confidential employee injury and medical-related information. ' +
-            'Access, use, and disclosure must comply with City policies and applicable law. ' +
-            'Do not share screenshots or case details with unauthorized individuals.' +
-          '</p>' +
-        '</div>',
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      confirmButtonText: "Load Cases"
-    }).then(function(result){
-      if (result && result.isConfirmed) {
-        refreshCases();
-      }
-    });
-  }
-
-  function waitForVerifiedTokenThenShowWelcome_() {
-    try {
-      if (window.APP && APP.token && String(APP.token).trim() !== '') {
-        showWelcomeAndLoadButton_();
-        return;
-      }
-    } catch(e) {}
-
-    setTimeout(waitForVerifiedTokenThenShowWelcome_, 200);
-  }
-
-  $(function() {
-    waitForVerifiedTokenThenShowWelcome_();
-  });
+  
+  // Don't auto-load - wait for user to navigate to dashboard section
+  // Dashboard will be loaded by Reports.html when section is shown
 </script>
+
+</body>
+</html>
